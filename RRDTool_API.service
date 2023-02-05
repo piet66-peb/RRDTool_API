@@ -1,0 +1,18 @@
+#
+# - put to /etc/systemd/system/ 
+# - sudo systemctl daemon-reload 
+# - sudo systemctl enable RRDTool_API.service 
+# - sudo systemctl start RRDTool_API.service 
+#
+[Unit]
+Description=HTTP API for RRDTool_API as a service
+
+[Service]
+Restart=always
+WorkingDirectory=/media/ZWay_USB/RRDTool_API
+ExecStart=/media/ZWay_USB/RRDTool_API/RRDTool_API.bash
+
+[Install]
+#runlevel 3:
+WantedBy=multi-user.target
+

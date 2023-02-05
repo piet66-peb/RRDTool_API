@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Stromverbrauch</title>
+      <link rel="shortcut icon" href="/html/img/electric_meter.webp">
+      <script src='/html/js/utils.js'></script>
+      <style> img{white-space:pre} </style>
+   </head>
+   <body>
+      <br>
+      <table>
+         <tr> <td> <h2>Stromverbrauch&nbsp;&nbsp;&nbsp;</h2> </td>
+              <td> <p id="interval" ></p> </td> </tr>
+      </table>
+
+      <table>
+         <tr> <td> <a href='/html/index1.html'> <p style="color:blue;"><u>Index</u></p> </a> </td>
+              <td> <a  id ="e1" href="http//jjjj">
+                   <p style="color:blue;"><u>Aktualisieren</u></p> </a> </td> </tr>
+      </table>
+
+      <script>
+          document.getElementById("e1").setAttribute("href", window.location);
+          utils.get_rrd_params('electric_meter', 
+                'Intervall: %STEP Sekunden, nächste Speicherung; %NEXT'); 
+      </script> 
+
+      <p style="text-align:center;">
+         <img src="./graphs_img/Stromverbrauch.png" alt="./graphs_img/Stromverbrauch.png">
+      </p>
+      <br><br>
+   </body>
+</html>
+

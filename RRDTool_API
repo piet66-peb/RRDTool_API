@@ -1,0 +1,8 @@
+/media/ZWay_USB/RRDTool_API/log/RRDTool_API.log {
+        size=3M
+        rotate 10
+        compress
+        missingok
+        notifempty
+        copytruncate
+}

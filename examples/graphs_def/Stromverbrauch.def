@@ -1,0 +1,72 @@
+#
+# Graph definition file
+# all options must be separated to single strings
+#
+
+(
+#'-s', 'end-1w',         #--start
+#'-e', 'now',            #--end
+#'-length', '1d',        #--length
+
+'-w', '1250',           #--width
+'-h', '600',            #--height
+
+#'-a', 'PNG',            #--imgformats
+'-n', 'DEFAULT:10',     #--font
+'-n', 'TITLE:14:Times', #--font
+'-X', '0',              #--units-exponent
+#'-Y',                   #--alt-y-grid
+#'-A',                   #--alt-autoscale
+'-i',                   #--interlaced
+
+'-r',                   #--rigid
+
+'TEXTALIGN:left',
+'-P', '-t', '<b>*** %G ***</b><br/><i>%T: %S ... %E</i>',    #--title
+
+#1. Daten sammeln:
+#-----------------
+#Leistung:
+'DEF:consumption=electric_meter.rrd:consumption:AVERAGE',
+'CDEF:leistung=consumption,3600,*,1000,/',
+'VDEF:leistung_ds=leistung,AVERAGE',
+'VDEF:leistung_max=leistung,MAXIMUM',
+
+#consumption:
+'VDEF:consumption_ds=consumption,AVERAGE',
+'VDEF:consumption_max=consumption,MAXIMUM',
+
+#Zählerstand, ausgerichted an der Leistung:
+'DEF:reading=electric_meter.rrd:reading:LAST',
+'VDEF:reading_min=reading,MINIMUM',
+'VDEF:reading_max=reading,MAXIMUM',
+'CDEF:reading_diff=reading,reading,-,reading_max,+,reading_min,-',
+'CDEF:reading_move=reading,reading_min,-,reading_diff,/,leistung_max,*',
+'VDEF:reading_last=reading,LAST',
+
+#waagrechter Strich von 0,53 kW
+'CDEF:ds_2022=reading,reading,-,0.53,+',
+'VDEF:ds_2022_last=ds_2022,LAST',
+
+#Nacht, ausgerichted an der Leistung;
+'DEF:daylight=daylight.rrd:daylight:LAST',
+'CDEF:nacht=daylight,leistung_max,*',
+
+#2. alles anzeigen:
+#------------------
+'AREA:nacht#80808030:Nacht, 0=Tag, 1=Nacht',
+
+'AREA:leistung#00FF00:Leistung (kW)',
+'GPRINT:leistung_ds:Durchschnitt\: %.1lf',
+'GPRINT:leistung_max:Maximum\: %.1lf',
+
+'LINE2:consumption#000000:Verbrauch/Sekunde (kWh)',
+'GPRINT:consumption_ds:Durchschnitt\: %.1lf',
+'GPRINT:consumption_max:Maximum\: %.1lf',
+
+'LINE2:reading_move#FF0000:Zählerstand (kWh)',
+'GPRINT:reading_last:letzter Zählerstand\: %.1lf',
+
+'LINE2:ds_2022#555555:Durchschnitt 2022:dashes',
+'GPRINT:ds_2022_last:(%.2lf kWh/Stunde)'
+)

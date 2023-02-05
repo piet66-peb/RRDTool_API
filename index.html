@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+      <meta charset="utf-8">
+      <title>RRDTool_API</title>
+      <link rel="shortcut icon" href="icon.png" />
+      <style>
+         {
+             border-collapse: collapse;
+             width: 100%;
+         }
+         td, th {
+             border: 1px solid black;
+         }
+         td {
+             vertical-align: top;
+             padding-bottom: 12px;
+         }
+         tr:hover {
+             background-color: #ddd;
+         }
+         th {
+             padding-top: 12px;
+             padding-bottom: 12px;
+             text-align: left;
+             background-color: #d3d3d3;
+             color: black;
+         }
+         a {
+            color:blue; 
+            display: inline; 
+            font-weight: bold;
+         }
+      </style>
+   </head>
+   <body>
+      <h2>HTTP API for RRDtool</h2>
+      <a href='https://oss.oetiker.ch/rrdtool' target='_blank'><u>RRDtool Website</u></a><br>
+      <br>
+      <table>
+         <tr>
+            <th>Action</th>
+            <th>Method</th>
+            <th>URL-Path + Query-String</th>
+            <th>success</th>
+            <th>ETag</th>
+            <th>failed/not found</th>
+         </tr>
+         <tr>
+             <td colspan=6 style="background-color: #f2f2f2;"><br>
+                 <b>*** Survey ***</b><br><br></td>
+         </tr>
+         <tr>
+            <td>functional survey (this page)</td>
+            <td>
+               GET
+            </td>
+            <td>/</td>
+            <td></td>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+             <td>README.md<br>
+             Markdown Viewer plugin necessary to format the response</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../README'><u>/README</u></a>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td>TIME_FORMATS.md<br>
+             Markdown Viewer plugin necessary to format the response</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../TIME_FORMATS'><u>/TIME_FORMATS</u></a>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+             <td colspan=6 style="background-color: #f2f2f2;"><br>
+                 <b>*** API ***</b> responds with JSON structure
+                  , JSON Viewer plugin necessary to format the response<br><br></td>
+         </tr>
+         <tr>
+            <td>API version</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../version'><u>/version</u></a>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+         </tr>
+         <tr>
+            <td>display a list of all rrd database files &lt;db&gt;.rrd</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../list_databases'><u>/list_databases</u></a>
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool update: add a new row</td>
+            <td>
+               POST, GET
+            </td>
+            <td><b>/&lt;db&gt;/update?ts=&lt;timestamp|N&gt;&values=&lt;values[:...]&gt;</b></td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool fetch: get data from rrd<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;cf: LAST<br>
+               &nbsp;&nbsp;&nbsp;e: now<br>
+               &nbsp;&nbsp;&nbsp;l: 1d<br>
+               &nbsp;&nbsp;&nbsp;s: end-1d<br>
+               &nbsp;&nbsp;&nbsp;times: yes
+            </td>
+            <td>
+               GET
+            </td>
+            <td><b>/&lt;db&gt;/fetch [?&lt;options&gt;]</b><br>
+               possible options:<br>
+               &nbsp;&nbsp;&nbsp;cf=&lt;LAST|AVERAGE|MIN|MAX&gt;<br>
+               &nbsp;&nbsp;&nbsp;e=&lt;end time&gt;<br>
+               &nbsp;&nbsp;&nbsp;l=&lt;length&gt;<br>
+               &nbsp;&nbsp;&nbsp;s=&lt;start time&gt;<br>
+               &nbsp;&nbsp;&nbsp;times=&lt;yes|no&gt;
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+             <td>rrdtool first: get timestamp of first stored data<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;rra: 0<br>
+            </td>
+            <td>
+               GET
+            </td>
+            <td><b>/&lt;db&gt;/first [?rra=&lt;rraindex&gt;]</b></td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool last+lastupdate: get timestamp and values of last stored data</td>
+            <td>
+               GET
+            </td>
+            <td><b>/&lt;db&gt;/last</b></td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool info: show header information of rrd</td>
+            <td>
+               GET
+            </td>
+            <td><b>/&lt;db&gt;/info</b></td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool dump: dump rrd in xml format</td>
+            <td>
+               GET
+            </td>
+            <td><b>/&lt;db&gt;/dump</b></td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+             <td colspan=6 style="background-color: #f2f2f2;"><br><b>*** Graphs ***</b><br><br></td>
+         </tr>
+         <tr>
+            <td>display a list of all existing graph definition files ./graphs_def/&lt;graph&gt;.def</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../list_graph_definitions'><u>/list_graph_definitions</u></a>
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>print graph definition<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;g: all existing graph definitions
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../print_graph_definition'><u>
+                       /print_graph_definition</u></a><b> [?&lt;options&gt;]</b><br>
+               possible options:<br>
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>display a list of all already generated graph image files ./graphs_img/&lt;graph&gt;.*</td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../list_graphs'><u>/list_graphs</u></a>
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>rrdtool graph: build and display new graphs from graph definitions<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;g: all existing graph definitions<br>
+               &nbsp;&nbsp;&nbsp;html: automatic generated html page<br><br>
+               &nbsp;&nbsp;&nbsp;if nothing else is specified in definition file:<br>
+               &nbsp;&nbsp;&nbsp;e: now<br>
+               &nbsp;&nbsp;&nbsp;l: 1d<br>
+               &nbsp;&nbsp;&nbsp;s: end-1d<br>
+               &nbsp;&nbsp;&nbsp;w: 1000<br>
+               &nbsp;&nbsp;&nbsp;h: 300
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../build_graph'><u>
+                       /build_graph</u></a> <b>[?&lt;options&gt;]</b><br>
+               possible options:<br>
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;<br>
+               &nbsp;&nbsp;&nbsp;html=&lt;user html page to start after generation&gt;<br>
+               &nbsp;&nbsp;&nbsp;html=- : don't display a html page after generation<br>
+               &nbsp;&nbsp;&nbsp;e=&lt;end time&gt;<br>
+               &nbsp;&nbsp;&nbsp;l=&lt;length&gt;<br>
+               &nbsp;&nbsp;&nbsp;s=&lt;start time&gt;<br>
+               &nbsp;&nbsp;&nbsp;w=&lt;width&gt;<br>
+               &nbsp;&nbsp;&nbsp;h=&lt;height&gt;<br><br>
+
+               format for start and end time;<br>
+               &nbsp;&nbsp;&nbsp;&lt;point in time&gt;[+-&lt;time difference&gt;]<br>
+               point in time: <br>
+               &nbsp;&nbsp;&nbsp;now|first|last|start|end|epoch time in seconds<br>
+               time difference: <br>
+               &nbsp;&nbsp;&nbsp;&lt;number&gt;&lt;interval code&gt;|seconds<br>
+               interval codes: <br>
+               &nbsp;&nbsp;&nbsp;m=minute(s), h=hour(s), d=day(s)<br>
+               &nbsp;&nbsp;&nbsp;w=week(s), M=Month(s), y=year(s)
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>display already generated graphs<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;g: all generated graphs<br>
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../display_graph'><u>/display_graph</u></a> 
+               <b>[?&lt;options&gt;]</b><br>
+               possible options:<br>
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+             <td colspan=6 style="background-color: #f2f2f2;"><br><b>*** User web pages ***</b><br><br></td>
+         </tr>
+         <tr>
+            <td>display a predefined user web page from the html folder<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;htmlfile: index.html
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+               <a href='../html'><u>/html/</u></a> <b>[&lt;htmlfile&gt;]</b>
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+             <td colspan=6 style="background-color: #f2f2f2;"><br><b>*** SQL like command ***</b><br><br></td>
+         </tr>
+
+         <tr>
+            <td>invoke a SQL like select<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;columns: *<br>
+               &nbsp;&nbsp;&nbsp;cf: LAST<br>
+               &nbsp;&nbsp;&nbsp;end: now<br>
+               &nbsp;&nbsp;&nbsp;start: end-1d<br>
+               <br>
+               column names for response:<br> 
+               &nbsp;&nbsp;&nbsp;ts = timestamp<br>
+               &nbsp;&nbsp;&nbsp;usertime = timestamp as string<br>
+               <br>
+               example:<br> 
+               &nbsp;&nbsp;&nbsp;select ts,reading,consumption from electric_meter <br>
+               &nbsp;&nbsp;&nbsp;where cf = LAST <br>
+               &nbsp;&nbsp;&nbsp;and ts &gt; 1669503600 and ts &lt;= 1669736328
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+               <b>/sql?[c=]&lt;command&gt;</b><br>
+               <b>/sql/json?[c=]&lt;command&gt;</b><br>
+               command format:<br>
+               &nbsp;&nbsp;&nbsp;select &lt;columns&gt; from &lt;database&gt; <br>
+               &nbsp;&nbsp;&nbsp;where cf = &lt;LAST|AVERAGE|MIN|MAX&gt; <br>
+               &nbsp;&nbsp;&nbsp;and ts &gt; &lt;start time&gt; <br>
+               &nbsp;&nbsp;&nbsp;and ts &lt;= &lt;end time&gt;<br>
+               epoch time in seconds or milliseconds<br><br>
+               text response, 
+               each record returned as a string with a comma separated list of values<br><br>
+               
+               <b>json:</b> json response, array of arrays <br><br>
+               no columns and and no '*' given:
+               response starts with a list of column headers
+            </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+      </table>
+   </body>
+</html>
+
