@@ -14,7 +14,7 @@ RRDTool_API supports these formats as well, with some differences:
 * **0** (single character) is equal to 00 is equal to 00:00 today.
 * **YYYY-MM-DD** is the same as DD.MM.YYYY is the same as MM/DD/YYYY
 * Additionally: **last** = timestamp of the last stored entry.
-* Additionally: **first** = timestamp of the first stored entry in top archive rra[0}.
+* Additionally: **first** = timestamp of the first stored entry in top archive rra[0].
 
 In case of graphs the very **last** respectively very **first** timestamp of all included databases is taken.
 
