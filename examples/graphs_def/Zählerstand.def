@@ -19,7 +19,7 @@
 '-A',                   #--alt-autoscale
 
 'TEXTALIGN:left',
-'-P', '-t', '<b>*** %G ***</b><br/><i>%T: %S ... %E</i>',    #--title
+'-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
 
 'DEF:reading=electric_meter.rrd:reading:LAST',
 'LINE2:reading#FF0000:Zählerstand (kWh)',

@@ -21,11 +21,11 @@
 '-i',                   #--interlaced
 
 'TEXTALIGN:left',
-'-P', '-t', '<b>*** %G ***</b><br/><i>%T: %S ... %E</i>',    #--title
+'-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
 
-#1. Daten sammeln:
-#-----------------
-#Leistung:
+#1. coolect data:
+#----------------
+#electric power:
 'DEF:consumption=electric_meter.rrd:consumption:AVERAGE',
 'CDEF:leistung=consumption,3600,*,1000,/',
 'VDEF:leistung_ds=leistung,AVERAGE',
@@ -35,7 +35,7 @@
 'VDEF:consumption_ds=consumption,AVERAGE',
 'VDEF:consumption_max=consumption,MAXIMUM',
 
-#Zählerstand, ausgerichted an der Leistung:
+#reading, aligned to the electrical power:
 'DEF:reading=electric_meter.rrd:reading:LAST',
 'VDEF:reading_min=reading,MINIMUM',
 'VDEF:reading_max=reading,MAXIMUM',
@@ -43,16 +43,16 @@
 'CDEF:reading_move=reading,reading_min,-,reading_diff,/,leistung_max,*',
 'VDEF:reading_last=reading,LAST',
 
-#waagrechter Strich von 0,53 kW
+#horizontal line at 0,53 kW
 'CDEF:ds_2022=reading,reading,-,0.53,+',
 'VDEF:ds_2022_last=ds_2022,LAST',
 
-#Nacht, ausgerichted an der Leistung;
+#night, aligned to the electrical power;
 'DEF:daylight=daylight.rrd:daylight:LAST',
 'CDEF:nacht=daylight,leistung_max,*',
 
-#2. alles anzeigen:
-#------------------
+#2. display all:
+#---------------
 'AREA:nacht#80808030:night, 0=day, 1=night',
 
 'AREA:leistung#00FF00:power (kW)',

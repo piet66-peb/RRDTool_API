@@ -1,0 +1,43 @@
+#
+# Default graph definition file
+# all options must be separated to single strings
+#
+
+(
+#'-s', 'end-1w',         #--start
+#'-e', 'now',            #--end
+#'-length', '1d',        #--length
+
+#'-w', '1000',           #--width
+#'-h', '300',            #--height
+
+#'-a', 'PNG',            #--imgformats
+'-n', 'DEFAULT:10',     #--font
+'-n', 'TITLE:14:Times', #--font
+'-X', '0',              #--units-exponent
+'-Y',                   #--alt-y-gr
+'-A',                   #--alt-autoscale
+
+'TEXTALIGN:left',
+'-P', '-t', '<b>*** %GRAPH %TYPE ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
+
+'DEF:value0=%DB_NAME.rrd:%DS_SOURCE:%CF',
+
+# correct value for DERIVE, DDERIVE, COUNTER, DCOUNTER:
+# display value = value*STEP
+'CDEF:value1=value0,%STEP,*',
+
+'LINE2:value1%COLOR:%DS_SOURCE',
+
+'VDEF:value1_max=value1,MAXIMUM',
+'VDEF:value1_min=value1,MINIMUM',
+'VDEF:value1_last=value1,LAST',
+'VDEF:value1_first=value1,FIRST',
+'VDEF:value1_average=value1,AVERAGE',
+
+'GPRINT:value1_first:first=%.1lf',
+'GPRINT:value1_last:last=%.1lf',
+'GPRINT:value1_min:minimum=%.1lf',
+'GPRINT:value1_max:maximum=%.1lf',
+'GPRINT:value1_average:average=%.1lf',
+)

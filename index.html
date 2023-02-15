@@ -17,7 +17,7 @@
              padding-bottom: 12px;
          }
          tr:hover {
-             background-color: #ddd;
+             background-color: #f5f5f5;
          }
          th {
              padding-top: 12px;
@@ -126,7 +126,7 @@
             <td>900</td>
          </tr>
          <tr>
-            <td>rrdtool fetch: get data from rrd<br>
+            <td>rrdtool fetch: get data from db<br>
                defaults:<br> 
                &nbsp;&nbsp;&nbsp;cf: LAST<br>
                &nbsp;&nbsp;&nbsp;e: now<br>
@@ -173,7 +173,7 @@
             <td>900</td>
          </tr>
          <tr>
-            <td>rrdtool info: show header information of rrd</td>
+            <td>rrdtool info: show header information of db</td>
             <td>
                GET
             </td>
@@ -183,7 +183,7 @@
             <td>900</td>
          </tr>
          <tr>
-            <td>rrdtool dump: dump rrd in xml format</td>
+            <td>rrdtool dump: dump db in xml format</td>
             <td>
                GET
             </td>
@@ -219,8 +219,28 @@
                <a href='../print_graph_definition'><u>
                        /print_graph_definition</u></a><b> [?&lt;options&gt;]</b><br>
                possible options:<br>
-               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;, *: any characters
             </td>
+            <td>200</td>
+            <td></td>
+            <td>900</td>
+         </tr>
+         <tr>
+            <td>create new default graph definition(s) from database file<br>
+               defaults:<br> 
+               &nbsp;&nbsp;&nbsp;ds: all ds sources from db<br>
+               name of the new definition file(s): <br>
+               &nbsp;&nbsp;&nbsp;&lt;db name&gt;-&lt;ds source&gt.def
+            </td>
+            <td>
+               GET
+            </td>
+            <td>
+                <b>/new_graph_definition?db=&lt;db name&gt;[&amp;ds=&lt;ds source&gt;]</b><br>
+               possible options:<br>
+               &nbsp;&nbsp;&nbsp;db=&lt;name of rrd file without path and extension&gt;<br>
+               &nbsp;&nbsp;&nbsp;ds=&lt;ds source&gt;
+           </td>
             <td>200</td>
             <td></td>
             <td>900</td>
@@ -256,7 +276,7 @@
                <a href='../build_graph'><u>
                        /build_graph</u></a> <b>[?&lt;options&gt;]</b><br>
                possible options:<br>
-               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;<br>
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;, *: any characters<br>
                &nbsp;&nbsp;&nbsp;html=&lt;user html page to start after generation&gt;<br>
                &nbsp;&nbsp;&nbsp;html=- : don't display a html page after generation<br>
                &nbsp;&nbsp;&nbsp;e=&lt;end time&gt;<br>
@@ -291,7 +311,7 @@
                <a href='../display_graph'><u>/display_graph</u></a> 
                <b>[?&lt;options&gt;]</b><br>
                possible options:<br>
-               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;, *: any characters
             </td>
             <td>200</td>
             <td></td>

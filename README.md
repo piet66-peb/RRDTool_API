@@ -26,12 +26,14 @@ It provides the ability to remotely
 ## Usage
 
 Display the main page and the interface description with
-**http://&lt;rrd_server&gt;:5001/**
+[**http://&lt;rrd_server&gt;:5001/**](html/img/RRDTool_API_interface.png)
 
 ## Requirements
 
 RRDTool_API runs on all operating systems with Python 3 and RRDtool.
 However, all included scripts are Linux bash scripts.
+<br>The operation is done via web browser. For correct formatting of the output
+ a JSON Viewer Plugin and a Markdown Viewer Plugin are necessary.
 
 ## Installation
 
@@ -96,11 +98,15 @@ The generated graphs are stored in the **./graphs_img** folder.
 
 ![](html/img/example.png)
 
+RDDTool_API provides the possibility to generate default graph definitionss from
+ a database file. These can then be further developed manually.
+
+
 #### User Web Pages
 
 The **./html** folder can be used to store user web pages to be called by 
 the API. Please note that RRDTool_API doesn't support all features of common 
-web servers. It is mainly designed to display pages with generated graphics.
+web servers. It is mainly designed to display pages with generated graphs.
 
 #### Examples
 

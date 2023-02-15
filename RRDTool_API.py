@@ -27,7 +27,7 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.0.0 2023-02-05/peb
+#h Version:      V1.1.0 2023-02-14/peb
 #v History:      V1.0.0 2022-11-23/peb first version
 #h Copyright:    (C) piet66 2022
 #h License:      http://opensource.org/licenses/MIT
@@ -47,6 +47,7 @@ from datetime import datetime
 import re
 from functools import wraps     #only for correct module documentation
 import locale
+import random
 import urllib.parse
 import time
 import json
@@ -64,8 +65,8 @@ import settings
 locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the environment variables
 
 MODULE = 'RRDTool_API.py'
-VERSION = 'V1.0.0'
-WRITTEN = '2023-02-05/peb'
+VERSION = 'V1.1.0'
+WRITTEN = '2023-02-14/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -82,6 +83,7 @@ GRAPHS_IMG = './graphs_img/'
 GRAPHS_DEF = './graphs_def/'
 HTML_PATH = './html/'
 RRD_PATH = './rrd/'
+DEFAULTS_PATH = './defaults/'
 if hasattr(settings, 'RRD_PATH'):
     RRD_PATH = settings.RRD_PATH
     if RRD_PATH[-1] != '/':
@@ -434,7 +436,8 @@ def build_except_err_string(error, graph):
 # build error text response
 def response_text_err(text):
     '''auxiliary function: build error text as formatted html'''
-    response = make_response('<font color=red size=+2>'+text+'</font>')
+    #response = make_response('<font color=red size=+2>'+text+'</font>')
+    response = make_response('<br><font color=red>'+text+'</font>')
     response.mimetype = 'text/html'
     app.logger.error(text)
     return response
@@ -452,12 +455,12 @@ def response_text(text, mimetype):
     return response
 
 # get database list
-def get_database_list(remove_ext):
+def get_database_list(remove_extension):
     '''auxiliary function: get database list'''
     files = glob.glob(RRD_PATH+'*.rrd')
     dbs = []
     for file_i in files:
-        if remove_ext:
+        if remove_extension:
             dbs.append(os.path.splitext(file_i)[0])
         else:
             dbs.append(file_i)
@@ -465,12 +468,12 @@ def get_database_list(remove_ext):
     return dbs
 
 # get graph list
-def get_graph_list(remove_ext):
+def get_graph_list(remove_extension):
     '''auxiliary function: get graph list'''
     files = glob.glob(GRAPHS_IMG+'*.*')
     graphs = []
     for file_i in files:
-        if remove_ext:
+        if remove_extension:
             graphs.append(os.path.splitext(os.path.basename(file_i))[0])
         else:
             graphs.append(os.path.basename(file_i))
@@ -478,15 +481,16 @@ def get_graph_list(remove_ext):
     return graphs
 
 # get graph definition list
-def get_graph_def_list(remove_ext):
+def get_graph_def_list(remove_extension=True):
     '''auxiliary function: get graph definition list'''
     files = glob.glob(GRAPHS_DEF+'*.def')
     graphs = []
     for file_i in files:
-        if remove_ext:
-            graphs.append(os.path.splitext(os.path.basename(file_i))[0])
+        basename = os.path.basename(file_i)
+        if remove_extension:
+            graphs.append(os.path.splitext(basename)[0])
         else:
-            graphs.append(os.path.basename(file_i))
+            graphs.append(basename)
     graphs.sort()
     return graphs
 
@@ -841,45 +845,152 @@ def list_graph_definitions():
         ret = build_except_err_string(error, None)
         return response_text_err(ret), BAD_REQUEST, ''
 
-def convert_string_to_tuple(inputstring):
-    '''route: response graph definition(s)s'''
-    #inputstring = inputstring.replace('(', '').replace(')', '').replace('"', '').replace("'", '')
-    xxxx = inputstring.split('\n')
-    #x = list(x)
-    return xxxx
+def get_graph_definition_list():
+    '''returns list of graph definitions'''
+    graph_list = get_graph_def_list()
+    recgraphs = request.args.get('g')
+    if not recgraphs or recgraphs == '*':
+        return graph_list
+
+    recgraphs_list = recgraphs.split(':')
+    graph_list_build = []
+    for recgraphs_i in recgraphs_list:
+        if recgraphs_i == '*':
+            return graph_list
+        if recgraphs_i in graph_list:
+            graph_list_build.append(recgraphs_i)
+            continue
+        if not '*' in recgraphs_i:
+            continue
+        recs_regex = "^"+recgraphs_i.replace("*", ".*").replace("$", r"\$")+"$"
+        for graph_i in graph_list:
+            if re.search(recs_regex, graph_i):
+                graph_list_build.append(graph_i)
+    graph_list_build = list(dict.fromkeys(graph_list_build))
+    app.logger.info(graph_list_build)
+    return graph_list_build
 
 @app.route('/print_graph_definition', methods=["GET"])
 def print_graph_definition():
-    '''route: response graph definition(s)s'''
+    '''route: response graph definition(s)'''
     try:
-        recgraphs = request.args.get('g')
-        if recgraphs:
-            all_graphsdefs = get_graph_def_list(True)
-            for recgraphs_i in recgraphs.split(':'):
-                if not recgraphs_i in all_graphsdefs:
-                    return response_text_err(
-                        'no definition file found for graph ' + recgraphs_i), DB_ERROR
+        graph_list_build = get_graph_definition_list()
+        if graph_list_build == []:
+            return response_text_err('no graph definition file found'), NOT_FOUND
 
-        graph_list = get_graph_def_list(True)
-        if graph_list == []:
-            return response_text_err('no graph definition found'), NOT_FOUND
         graph_def_array = []
-        for graph in graph_list:
-            if not recgraphs or graph in recgraphs:
-                ret = read_file(GRAPHS_DEF+graph+'.def')
-                if ret[1] != OK:
-                    return response_text_err(ret[0]), ret[1]
-                graph_def = make_tuple(ret[0])
-                graph_def_array.append({graph+'.def': list(graph_def)})
+        for graph in graph_list_build:
+            ret = read_file(GRAPHS_DEF+graph+'.def')
+            if ret[1] != OK:
+                return response_text_err(ret[0]), ret[1]
+            graph_def = make_tuple(ret[0])
+            graph_def_array.append({graph+'.def': list(graph_def)})
 
         return response_text(graph_def_array, ''), OK
 #pylint: disable=broad-except
     except Exception as error:
         ret = build_except_err_string(error, graph)
         return response_text_err(ret), BAD_REQUEST, ''
+###print_graph_definition
+
+def random_color():
+    '''returns a random color'''
+    r_rgb = format(random.randint(0, 255), '02x')
+    g_rgb = format(random.randint(0, 255), '02x')
+    b_rgb = format(random.randint(0, 255), '02x')
+    return '#'+r_rgb+g_rgb+b_rgb
+
+@app.route('/new_graph_definition', methods=["GET"])
+def new_graph_definition():
+    '''route: create a new graph definition from default'''
+    try:
+        graph = None
+        dbase = request.args.get('db')
+        if not dbase:
+            return response_text_err('db missing'), BAD_REQUEST
+        if not os.path.isfile(RRD_PATH+dbase+'.rrd'):
+            return response_text_err('database '+dbase+' not found'), NOT_FOUND
+
+        #read default file:
+        ret = read_file(DEFAULTS_PATH+'default.def')
+        if ret[1] != OK:
+            return response_text_err(ret[0]), ret[1]
+        default_def = make_tuple(ret[0])
+
+        #get list of ds sources from rrd:
+        info_dict = rrdtool.info(RRD_PATH+dbase+'.rrd')
+        step = str(info_dict['step'])
+        app.logger.warn('step='+step)
+        ds_sources = {}
+        for key in info_dict:
+            if 'ds[' in key:
+                ds_name = key.split(']', 1)[0].split('[', 1)[1]
+                if ds_name and ds_name not in ds_sources:
+                    index = info_dict['ds['+ds_name+'].index']
+                    ds_sources[ds_name] = {
+                        'index': index,
+                        'type' : info_dict['ds['+ds_name+'].type'],
+                        'min': info_dict['ds['+ds_name+'].min'],
+                        'max': info_dict['ds['+ds_name+'].max']}
+            elif len(ds_sources) > 0:
+                break
+        if len(ds_sources) == 0:
+            return response_text_err('no ds source found in database '+dbase), NOT_FOUND
+        app.logger.warn(ds_sources)
+
+        ds_source = request.args.get('ds')
+        if ds_source:
+            if ds_source not in ds_sources:
+                return response_text_err(
+                    'ds source '+ds_source+' not found in database '+dbase), NOT_FOUND
+
+        #enum all ds sources
+        files_created = []
+        for ds_i in ds_sources:
+            if ds_source and ds_i != ds_source:
+                continue
+            graph = dbase+'-'+ds_i
+            file_def_new = '('
+            for line in default_def:
+                line = line.replace('%DS_SOURCE', ds_i)
+                line = line.replace('%DB_NAME', dbase)
+                line = line.replace('%CF', 'LAST')
+                line = line.replace('%COLOR', random_color())
+
+                ds_type = ds_sources[ds_i]['type']
+                line = line.replace('%TYPE', ds_type)
+                if ds_type in ('DERIVE', 'DDERIVE', 'COUNTER', 'DCOUNTER'):
+                    line = line.replace('%STEP', step)
+                else:
+                    line = line.replace('%STEP', '1')
+
+                file_def_new += "\n'"+line+"',"
+
+            min_value = ds_sources[ds_i]['min']
+            if min_value is not None:
+                min_str = "'-l', '"+str(min_value)+"',"
+                file_def_new += "\n"+min_str
+            max_value = ds_sources[ds_i]['max']
+            if max_value is not None:
+                max_str = "'-u', '"+str(max_value)+"',"
+                file_def_new += "\n"+max_str
+
+            file_def_new += '\n)'
+            fil = open(GRAPHS_DEF+graph+'.def', "w")
+            fil.write(file_def_new)
+            fil.close()
+
+            files_created.append(graph+'.def')
+        return response_text({'graph definitions created': files_created}, ''), OK
+
+#pylint: disable=broad-except
+    except Exception as error:
+        ret = build_except_err_string(error, graph)
+        return response_text_err(ret), BAD_REQUEST, ''
+###new_graph_definition
 
 # build images webpage
-def build_all_images_html(recgraphs):
+def build_all_images_html(graph_list):
     '''auxiliary function: builds a html page with all images'''
     html = '''
 <!DOCTYPE html>
@@ -890,9 +1001,8 @@ def build_all_images_html(recgraphs):
 </head>
 <body>
 '''
-    if not recgraphs:
-        #get all graph files in local folder
-        files = glob.glob(GRAPHS_IMG+'*.*')
+    for recgraphs_i in graph_list:
+        files = glob.glob(GRAPHS_IMG+recgraphs_i+'.*')
         files.sort()
         for file_i in files:
             mimetype = get_mimetype_by_suffix(file_i)[1]
@@ -902,27 +1012,9 @@ def build_all_images_html(recgraphs):
             if 'image' in mimetype:
                 full_file_i = GRAPHS_IMG+os.path.basename(file_i)
                 html += '   <img src="'+full_file_i+'"'
-                html += ' alt="actually the image '+full_file_i
-                html += ' should have been displayed here"><br><br>\n'
+                html += ' alt="'+full_file_i+'"><br><br>\n'
             else:
                 html += '   <a href="'+file_i+'">'+file_i+'</a> <br><br>\n'
-
-    else:
-        for recgraphs_i in recgraphs.split(':'):
-            files = glob.glob(GRAPHS_IMG+recgraphs_i+'.*')
-            files.sort()
-            for file_i in files:
-                mimetype = get_mimetype_by_suffix(file_i)[1]
-                if mimetype == ():
-                    app.logger.info("mimetype for "+file_i+' not detected')
-                    continue
-                if 'image' in mimetype:
-                    full_file_i = GRAPHS_IMG+os.path.basename(file_i)
-                    html += '   <img src="'+full_file_i+'"'
-                    html += ' alt="actually the image '+full_file_i
-                    html += ' should have been displayed here"><br><br>\n'
-                else:
-                    html += '   <a href="'+file_i+'">'+file_i+'</a> <br><br>\n'
     html += '</body>\n</html>'
     return html
 
@@ -930,15 +1022,11 @@ def build_all_images_html(recgraphs):
 def route_api_display_graph():
     '''route: call graphs html'''
     try:
-        recgraphs = request.args.get('g')
-        if recgraphs:
-            all_graphsdefs = get_graph_def_list(True)
-            for recgraphs_i in recgraphs.split(':'):
-                if not recgraphs_i in all_graphsdefs:
-#pylint: disable=line-too-long
-                    return response_text_err('no image file found for graph ' + recgraphs_i), DB_ERROR
+        graph_list_build = get_graph_definition_list()
+        if graph_list_build == []:
+            return response_text_err('no graph definition file found'), NOT_FOUND
 
-        return build_all_images_html(recgraphs)
+        return build_all_images_html(graph_list_build)
 #pylint: disable=broad-except
     except Exception as error:
         ret = build_except_err_string(error, None)
@@ -1101,9 +1189,9 @@ def build_this_graph(graph, start, end, length, width, height):
     if ret[1] != OK:
         return ret[0], ret[1]
     if ret[0]:
-        title = ret[0].replace('%E', end_orig).replace('%S', start_orig).replace('%G', graph)
         currtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        title = title.replace('%T', currtime)
+        title = ret[0].replace('%END', end_orig) .replace('%START', start_orig)
+        title = title.replace('%GRAPH', graph) .replace('%CURRTIME', currtime)
         common_def += ('-t', title)
         if ret[2] >= 0:
             sindexlist.append(ret[2])
@@ -1133,38 +1221,27 @@ def route_api_build_graph():
     '''route: generate graphs from rrd'''
 
     try:
-        recgraphs = request.args.get('g')
-        if recgraphs:
-            all_graphsdefs = get_graph_def_list(True)
-            for recgraphs_i in recgraphs.split(':'):
-                if not recgraphs_i in all_graphsdefs:
-                    return response_text_err(
-                        'no definition file found for graph ' + recgraphs_i), DB_ERROR
+        graph_list_build = get_graph_definition_list()
+        if graph_list_build == []:
+            return response_text_err('no graph definition file found'), NOT_FOUND
 
         start, end, length = request_times_args(False)
-
         width = request.args.get('w')
         height = request.args.get('h')
 
-        graph_list = get_graph_def_list(True)
-        if graph_list == []:
-            return response_text_err('no graph definition found'), NOT_FOUND
-
-        if recgraphs:
-            for graph in recgraphs.split(':'):
-                if graph in graph_list:
-                    ret = build_this_graph(graph, start, end, length, width, height)
-                    if ret[1] != OK:
-                        return response_text_err(ret[0]), ret[1]
-        else:
+        recgraphs = request.args.get('g')
+        if recgraphs is None or '*' in recgraphs:
             if width is None:
                 width = settings.WIDTH
             if height is None:
                 height = settings.HEIGHT
-            for graph in graph_list:
-                ret = build_this_graph(graph, start, end, length, width, height)
-                if ret[1] != OK:
-                    return response_text_err(ret[0]), ret[1]
+
+        for graph in graph_list_build:
+            if graph[0] == '$':
+                continue
+            ret = build_this_graph(graph, start, end, length, width, height)
+            if ret[1] != OK:
+                return response_text_err(ret[0]), ret[1]
 
         #return response_text('new graphs build', ''), OK
         html = request.args.get('html')
@@ -1175,7 +1252,7 @@ def route_api_build_graph():
             if ret[1] != OK:
                 return response_text_err(ret[0]), ret[1]
             return response_text(ret[0], ret[2]), ret[1]
-        return build_all_images_html(recgraphs)
+        return build_all_images_html(graph_list_build)
 #pylint: disable=broad-except
     except Exception as error:
         ret = build_except_err_string(error, graph)
