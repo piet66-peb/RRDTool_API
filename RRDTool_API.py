@@ -27,8 +27,9 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.1.0 2023-02-14/peb
+#h Version:      V1.2.0 2023-02-27/peb
 #v History:      V1.0.0 2022-11-23/peb first version
+#v               V1.2.0 2023-02-24/peb [+] cgi-bin
 #h Copyright:    (C) piet66 2022
 #h License:      http://opensource.org/licenses/MIT
 #h
@@ -40,6 +41,7 @@
 #pylint: disable=too-many-branches, too-many-locals, too-many-statements
 
 import os
+import subprocess
 import traceback
 import platform
 import glob
@@ -65,8 +67,8 @@ import settings
 locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the environment variables
 
 MODULE = 'RRDTool_API.py'
-VERSION = 'V1.1.0'
-WRITTEN = '2023-02-14/peb'
+VERSION = 'V1.2.0'
+WRITTEN = '2023-02-27/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -79,20 +81,6 @@ app.config['JSON_SORT_KEYS'] = False
 #----------------------------------------------------------------------------
 
 # constants
-GRAPHS_IMG = './graphs_img/'
-GRAPHS_DEF = './graphs_def/'
-HTML_PATH = './html/'
-RRD_PATH = './rrd/'
-DEFAULTS_PATH = './defaults/'
-if hasattr(settings, 'RRD_PATH'):
-    RRD_PATH = settings.RRD_PATH
-    if RRD_PATH[-1] != '/':
-        RRD_PATH += '/'
-ENABLE_MD_BLOCK = False
-if hasattr(settings, 'ENABLE_MD_BLOCK'):
-    ENABLE_MD_BLOCK = settings.ENABLE_MD_BLOCK
-    if ENABLE_MD_BLOCK is not True:
-        ENABLE_MD_BLOCK = False
 
 # http status codes
 OK = 200
@@ -117,43 +105,50 @@ STARTED = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 #----- get and process settings --------------------------------------------
 
-#pylint: disable=no-member
-if hasattr(settings, 'LOGLEVEL'):
-    LOGLEVEL = settings.LOGLEVEL
-else:
-    LOGLEVEL = 20
-app.logger.setLevel(LOGLEVEL)
-if hasattr(settings, 'DISABLE_AUTHENTICATION'):
-    DISABLE_AUTHENTICATION = settings.DISABLE_AUTHENTICATION
-else:
-    DISABLE_AUTHENTICATION = False
-if hasattr(settings, 'USERNAME'):
-    USERNAME = settings.USERNAME
-else:
-    raise RuntimeError('no USERNAME defined in settings.py!')
-if hasattr(settings, 'PASSWORD'):
-    PASSWORD = settings.PASSWORD
-else:
-    raise RuntimeError('no PASSWORD defined in settings.py!')
-if hasattr(settings, 'ALLOW_WRITE_WITH_GET'):
-    ALLOW_WRITE_WITH_GET = settings.ALLOW_WRITE_WITH_GET
-else:
-    ALLOW_WRITE_WITH_GET = False
-if hasattr(settings, 'CORS_HOST'):
-    CORS_HOST = settings.CORS_HOST
-else:
-    CORS_HOST = None
-    app.logger.warning('no CORS_HOST defined in settings.py!')
-if hasattr(settings, 'WHITELIST_GET'):
-    WHITELIST_GET = settings.WHITELIST_GET
-else:
-    WHITELIST_GET = []
-if hasattr(settings, 'WHITELIST_POST'):
-    WHITELIST_POST = settings.WHITELIST_POST
-else:
-    WHITELIST_POST = []
-#pylint: enable=no-member
+def read_setting(setting_name, default_setting=None, is_path=False):
+    '''read setting from settings.py'''
+    if not hasattr(settings, setting_name):
+        return default_setting
+    if not is_path:
+        return getattr(settings, setting_name)
+    value = str(getattr(settings, setting_name))
+    if value[-1] == '/' or  value[-1] == '\\':
+        return value
+    return value+'/'
 
+LOGLEVEL = read_setting('LOGLEVEL', 20)
+app.logger.setLevel(LOGLEVEL)
+
+GRAPHS_IMG = read_setting('GRAPHS_IMG', './graphs_img/', True)
+GRAPHS_DEF = read_setting('GRAPHS_DEF', './graphs_def/', True)
+HTML_PATH = read_setting('HTML_PATH', './html/', True)
+RRD_PATH = read_setting('RRD_PATH', './rrd/', True)
+DEFAULTS_PATH = read_setting('DEFAULTS_PATH', './defaults/', True)
+TMP_PATH = read_setting('TMP_PATH', './tmp/', True)
+CGI_PATH = read_setting('CGI_PATH', './html/cgi-bin/', True)
+RUN_CGI = read_setting('RUN_CGI', CGI_PATH+'run_cgi.bash')
+
+
+WIDTH = str(read_setting('WIDTH', 1200))
+HEIGHT = str(read_setting('HEIGHT', 200))
+
+ENABLE_MD_BLOCK = read_setting('ENABLE_MD_BLOCK', False)
+
+DISABLE_AUTHENTICATION = read_setting('DISABLE_AUTHENTICATION', False)
+ALLOW_WRITE_WITH_GET = read_setting('ALLOW_WRITE_WITH_GET', False)
+WHITELIST_GET = read_setting('WHITELIST_GET', [])
+WHITELIST_POST = read_setting('WHITELIST_POST', [])
+CORS_HOST = read_setting('CORS_HOST')
+
+USERNAME = read_setting('USERNAME')
+if USERNAME is None:
+    raise RuntimeError('no USERNAME defined in settings.py!')
+PASSWORD = read_setting('PASSWORD')
+if PASSWORD is None:
+    raise RuntimeError('no PASSWORD defined in settings.py!')
+
+if CORS_HOST is None:
+    app.logger.warning('no CORS_HOST defined in settings.py!')
 if DISABLE_AUTHENTICATION:
     app.logger.warning('authentication for write access is disabled for everybody')
 if ALLOW_WRITE_WITH_GET:
@@ -274,6 +269,20 @@ def auth_required(func):
     return decorator
 
 #----- auxiliary functions --------------------------------------------------
+
+def change_loglevel(new_loglevel):
+    '''dynamically change the loglevel'''
+    if new_loglevel is None:
+        return
+    if new_loglevel not in ('10', '20', '30', '40', '50'):
+        return
+    new_loglevel = int(new_loglevel)
+#pylint: disable=global-statement
+    global LOGLEVEL
+    if new_loglevel != LOGLEVEL:
+        LOGLEVEL = new_loglevel
+        app.logger.setLevel(LOGLEVEL)
+        app.logger.warn('new loglevel='+str(LOGLEVEL))
 
 def request_correct_arg(arg, arg2, default=None):
     '''request.args.get manually'''
@@ -648,6 +657,7 @@ def route_api_icon_png():
 @app.route('/version', methods=["GET"])
 def route_api_version():
     '''route: response version information'''
+    change_loglevel(request.args.get('loglevel'))
     try:
         info = {"MODULE": MODULE,
                 "VERSION": VERSION,
@@ -656,7 +666,8 @@ def route_api_version():
                 "FLASK": FLASK_VERSION,
                 "RRDTOOL": RRDTOOL,
                 "PYTHON_RRDTOOL": PYTHON_RRDTOOL,
-                "STARTED": STARTED
+                "STARTED": STARTED,
+                "LOGLEVEL": LOGLEVEL
                 }
         return response_text(info, '')
 #pylint: disable=broad-except
@@ -765,9 +776,12 @@ def route_api_fetch(dbase):
         start, end = replace_times_first_last(start, end, [dbase+'.rrd'])
         start, end = convert_date_format(start, end)
 
+        resolution = request.args.get('r')
         times = request.args.get('times', 'yes')
 
         params = (RRD_PATH+dbase+'.rrd', cif, '-s', start, '-e', end, '-a')
+        if resolution:
+            params += ('--resolution', resolution)
         app.logger.info(params)
         fetch = rrdtool.fetch(*params)
         #start, end, step = fetch[0]
@@ -849,12 +863,14 @@ def get_graph_definition_list():
     '''returns list of graph definitions'''
     graph_list = get_graph_def_list()
     recgraphs = request.args.get('g')
+    app.logger.info('recgraphs='+str(recgraphs))
     if not recgraphs or recgraphs == '*':
         return graph_list
 
     recgraphs_list = recgraphs.split(':')
     graph_list_build = []
     for recgraphs_i in recgraphs_list:
+        app.logger.info('recgraphs_i='+recgraphs_i)
         if recgraphs_i == '*':
             return graph_list
         if recgraphs_i in graph_list:
@@ -876,6 +892,9 @@ def print_graph_definition():
     try:
         graph_list_build = get_graph_definition_list()
         if graph_list_build == []:
+            recgraphs = request.args.get('g')
+            if recgraphs:
+                return response_text_err('no graph definition file found for '+recgraphs), NOT_FOUND
             return response_text_err('no graph definition file found'), NOT_FOUND
 
         graph_def_array = []
@@ -919,8 +938,8 @@ def new_graph_definition():
 
         #get list of ds sources from rrd:
         info_dict = rrdtool.info(RRD_PATH+dbase+'.rrd')
-        step = str(info_dict['step'])
-        app.logger.warn('step='+step)
+        rrd_step = str(info_dict['step'])
+        app.logger.warn('rrd_step='+rrd_step)
         ds_sources = {}
         for key in info_dict:
             if 'ds[' in key:
@@ -930,6 +949,7 @@ def new_graph_definition():
                     ds_sources[ds_name] = {
                         'index': index,
                         'type' : info_dict['ds['+ds_name+'].type'],
+                        'cf': info_dict['rra[0].cf'],
                         'min': info_dict['ds['+ds_name+'].min'],
                         'max': info_dict['ds['+ds_name+'].max']}
             elif len(ds_sources) > 0:
@@ -949,30 +969,63 @@ def new_graph_definition():
         for ds_i in ds_sources:
             if ds_source and ds_i != ds_source:
                 continue
+            color = random_color()
             graph = dbase+'-'+ds_i
+            index = ds_sources[ds_i]['index']
+            ds_type = ds_sources[ds_i]['type']
+            cf_value = ds_sources[ds_i]['cf']
+            min_value = ds_sources[ds_i]['min']
+            max_value = ds_sources[ds_i]['max']
+
+            cf_set = None
+            if ds_type in ('DERIVE', 'DDERIVE', 'COUNTER', 'DCOUNTER'):
+                cf_set = 'AVERAGE'
+
             file_def_new = '('
+
+            #add comments to output buffer;
+            file_def_new += '\n####'
+            file_def_new += '\n#### generated graph definition'
+            file_def_new += '\n#### '+graph+'.def'
+            file_def_new += '\n####'
+            file_def_new += '\n#### database = '+dbase
+            file_def_new += '\n#### data source = '+ds_i
+            file_def_new += '\n#### index = '+str(index)
+            file_def_new += '\n#### type = '+ds_type
+            file_def_new += '\n#### rra[0].cf = '+cf_value
+            if cf_set:
+                file_def_new += '\n#### set to '+cf_set+' for DERIVE, DDERIVE, COUNTER, DCOUNTER'
+            file_def_new += '\n#### rrd_step = '+rrd_step
+            file_def_new += '\n#### min = '+str(min_value)
+            file_def_new += '\n#### max = '+str(max_value)
+            file_def_new += '\n#### random color = '+color
+            file_def_new += '\n####'
+
             for line in default_def:
                 line = line.replace('%DS_SOURCE', ds_i)
                 line = line.replace('%DB_NAME', dbase)
-                line = line.replace('%CF', 'LAST')
-                line = line.replace('%COLOR', random_color())
-
-                ds_type = ds_sources[ds_i]['type']
+                line = line.replace('%COLOR', color)
                 line = line.replace('%TYPE', ds_type)
-                if ds_type in ('DERIVE', 'DDERIVE', 'COUNTER', 'DCOUNTER'):
-                    line = line.replace('%STEP', step)
+                if cf_set:
+                    line = line.replace('%CF', cf_set)
                 else:
-                    line = line.replace('%STEP', '1')
+                    line = line.replace('%CF', cf_value)
 
+                if '%SECONDS' in line:
+                    if ds_type in ('DERIVE', 'DDERIVE', 'COUNTER', 'DCOUNTER'):
+                        file_def_new += '\n\n# correct value for summing up for'
+                        file_def_new += '\n# DERIVE, DDERIVE, COUNTER, DCOUNTER:'
+                        file_def_new += '\n# display value = value * nvl(resolution, rrd_step)'
+                        line = line.replace('%SECONDS', '%RESOL='+rrd_step)
+                    else:
+                        line = line.replace('%SECONDS', '1')
                 file_def_new += "\n'"+line+"',"
 
-            min_value = ds_sources[ds_i]['min']
             if min_value is not None:
-                min_str = "'-l', '"+str(min_value)+"',"
+                min_str = "\n'-l', '"+str(min_value)+"',  # lower limit"
                 file_def_new += "\n"+min_str
-            max_value = ds_sources[ds_i]['max']
             if max_value is not None:
-                max_str = "'-u', '"+str(max_value)+"',"
+                max_str = "\n'-u', '"+str(max_value)+"',  # upper limit"
                 file_def_new += "\n"+max_str
 
             file_def_new += '\n)'
@@ -998,9 +1051,18 @@ def build_all_images_html(graph_list):
 <head>
    <link rel="shortcut icon" href="icon.png" />
    <title>RRDTool Graphs</title>
-</head>
+   <style> img{white-space:pre} </style></head>
 <body>
-'''
+   <table>
+      <tr>
+         <td> <a href='/html/'> <p style="color:blue;"><u>Index</u></p> </a> </td>
+         <td> <a  id ="e1" href="http//jjjj"> <p style="color:blue;"><u>Aktualisieren</u></p> </a> </td>
+      </tr>
+   </table>
+   <script>
+       document.getElementById("e1").setAttribute("href", window.location);
+   </script>
+   '''
     for recgraphs_i in graph_list:
         files = glob.glob(GRAPHS_IMG+recgraphs_i+'.*')
         files.sort()
@@ -1024,6 +1086,9 @@ def route_api_display_graph():
     try:
         graph_list_build = get_graph_definition_list()
         if graph_list_build == []:
+            recgraphs = request.args.get('g')
+            if recgraphs:
+                return response_text_err('no graph definition file found for '+recgraphs), NOT_FOUND
             return response_text_err('no graph definition file found'), NOT_FOUND
 
         return build_all_images_html(graph_list_build)
@@ -1058,38 +1123,54 @@ def contains(given_tuple, given_string):
 
 #pylint: disable=too-many-arguments
 def get_defs_option(graph, graph_def, opt1, opt2, default, input_value):
-    '''auxiliary function: execute rrdtool graph'''
+    '''auxiliary function: execute rrdtool graph
+       argument hierarchy:
+       1. input value
+       2. value in def file
+       3. default
+    '''
     app.logger.info('get_defs_option '+graph+' '+(opt2 or opt1))
 
-    ret = '?', BAD_REQUEST
-    sindex = -99
-    for opt in (opt1, opt2):
-        if contains(graph_def, opt):
-            try:
-                sindex = graph_def.index(opt)
-                if sindex >= len(graph_def) + 1:
-                    ret = 'graph '+graph+': wrong option "'+opt, BAD_REQUEST
-                else:
+#pylint: disable=too-many-nested-blocks
+    sindex = -1
+    ret = None, None, None
+    while True:
+        # 1. check for value in def file:
+        for opt in (opt1, opt2):
+            if contains(graph_def, opt):
+                try:
+                    sindex = graph_def.index(opt)
+                    if sindex >= len(graph_def) + 1:
+                        ret = 'graph '+graph+': wrong option "'+opt, BAD_REQUEST
+                        break
                     value = graph_def[sindex+1]     #take value
                     if opt in ('-length', '--length'):
                         value = convert_length(value)
-                    ret = value, OK
-            except ValueError as error:
-                app.logger.info(error)
-                ret = 'graph '+graph+': wrong option "'+opt, BAD_REQUEST
-    if input_value is not None:
-        ret = input_value, OK       #input overwrites rrd value
-    elif ret[1] != OK:
-        ret = default, OK           #set default if nothing else is set
+                    ret = value.strip(), OK, sindex
+                    if input_value is None:
+                        break
+                except ValueError as error:
+                    app.logger.error(error)
+                    ret = 'graph '+graph+': wrong option "'+opt, BAD_REQUEST
+                    break
+        if ret[1] == BAD_REQUEST:
+            break
+        if ret[1] == OK and input_value is None:
+            break
 
-    if ret[1] != OK:
-        ret = 'graph '+graph+': programming error at"'+opt, BAD_REQUEST
-    else:
-        ret = str(ret[0]).strip(), ret[1], sindex
-        #app.logger.info(opt1+' argument='+retstr[0])
+        # 2. return if input value:
+        if input_value is not None:
+            ret = input_value, OK, sindex
+            break
+
+        # 3. take default value:
+        ret = default, OK, -1
+        break
+    app.logger.info(ret)
     return ret
+###get_defs_option
 
-def build_this_graph(graph, start, end, length, width, height):
+def build_this_graph(graph, start, end, length, width, height, resolution, create_bash=None):
     '''auxiliary function: execute rrdtool graph'''
 
     ret = read_file(GRAPHS_DEF+graph+'.def')
@@ -1158,7 +1239,7 @@ def build_this_graph(graph, start, end, length, width, height):
     common_def += ('-s', start)
     common_def += ('-e', end)
 
-    ret = get_defs_option(graph, graph_def, '-w', '--width', settings.WIDTH, width)
+    ret = get_defs_option(graph, graph_def, '-w', '--width', WIDTH, width)
     if ret[1] != OK:
         return ret[0], ret[1]
     common_def += ('-w', ret[0])
@@ -1166,13 +1247,26 @@ def build_this_graph(graph, start, end, length, width, height):
         sindexlist.append(ret[2])
         #app.logger.info('sindex='+str(ret[2]))
 
-    ret = get_defs_option(graph, graph_def, '-h', '--height', settings.HEIGHT, height)
+    ret = get_defs_option(graph, graph_def, '-h', '--height', HEIGHT, height)
     if ret[1] != OK:
         return ret[0], ret[1]
     common_def += ('-h', ret[0])
     if ret[2] >= 0:
         sindexlist.append(ret[2])
         #app.logger.info('sindex='+str(ret[2]))
+
+    ret = get_defs_option(graph, graph_def, '-S', '--step', None, resolution)
+    if ret[1] != OK:
+        return ret[0], ret[1]
+    if ret[0] is not None:
+        if not ret[0].isdigit():
+#pylint: disable=line-too-long
+            return 'graph '+graph+': resolution (--start) must be numeric (number of seconds)', BAD_REQUEST
+        resolution = ret[0]
+        common_def += ('-S', ret[0])
+        if ret[2] >= 0:
+            sindexlist.append(ret[2])
+            #app.logger.info('sindex='+str(ret[2]))
 
     ret = get_defs_option(graph, graph_def, '-a', '--imgformats', 'PNG', None)
     if ret[1] != OK:
@@ -1192,6 +1286,7 @@ def build_this_graph(graph, start, end, length, width, height):
         currtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         title = ret[0].replace('%END', end_orig) .replace('%START', start_orig)
         title = title.replace('%GRAPH', graph) .replace('%CURRTIME', currtime)
+        title = title.replace('%RESOL', str(resolution))
         common_def += ('-t', title)
         if ret[2] >= 0:
             sindexlist.append(ret[2])
@@ -1203,14 +1298,32 @@ def build_this_graph(graph, start, end, length, width, height):
 #pylint: disable=consider-using-enumerate
     for indx in range(len(graph_def)):
         #app.logger.info(graph_def[indx])
+        #skip arguments in def file (already stored):
         if indx not in sindexlist and indx-1 not in sindexlist:
             line = graph_def[indx]
             if '.rrd' in line:
-                line = line.replace('=', '='+RRD_PATH)
+                line = line.replace('=', '='+RRD_PATH, 1)
+            if '%RESOL' in line:
+                if resolution:
+                    line = line.replace('%RESOL,', str(resolution)+',')
+                    line = re.sub('%RESOL=[^,]*', str(resolution), line)
+                else:
+                    line = re.sub('%RESOL=?', '', line)
             definition += (line,)
             #app.logger.info('taken')
 
     app.logger.info(definition)
+
+    if create_bash == 'yes':
+    #create a bash script for this rrdgraph:
+        xxx = str(definition).replace("', '", "'\\\n '")
+        xxx = re.sub(r"^\('", "'", xxx, 1)
+        xxx = re.sub(r"'\)$", "'", xxx, 1)
+        xxx = re.sub('./', "../", xxx, 1)
+        fil = open(TMP_PATH+graph+'.def.bash', "w")
+        fil.write('sudo rrdtool graphv \\\n'+xxx)
+        fil.close()
+
     result = rrdtool.graph(*definition)
     app.logger.info(result)
     return 'new version of graph '+graph+' stored', OK
@@ -1223,23 +1336,27 @@ def route_api_build_graph():
     try:
         graph_list_build = get_graph_definition_list()
         if graph_list_build == []:
+            recgraphs = request.args.get('g')
+            if recgraphs:
+                return response_text_err('no graph definition file found for '+recgraphs), NOT_FOUND
             return response_text_err('no graph definition file found'), NOT_FOUND
 
         start, end, length = request_times_args(False)
         width = request.args.get('w')
         height = request.args.get('h')
+        resolution = request.args.get('r')
+        create_bash = request.args.get('create_bash')
 
         recgraphs = request.args.get('g')
         if recgraphs is None or '*' in recgraphs:
             if width is None:
-                width = settings.WIDTH
+                width = WIDTH
             if height is None:
-                height = settings.HEIGHT
+                height = HEIGHT
 
         for graph in graph_list_build:
-            if graph[0] == '$':
-                continue
-            ret = build_this_graph(graph, start, end, length, width, height)
+            ret = build_this_graph(
+                graph, start, end, length, width, height, resolution, create_bash)
             if ret[1] != OK:
                 return response_text_err(ret[0]), ret[1]
 
@@ -1255,7 +1372,7 @@ def route_api_build_graph():
         return build_all_images_html(graph_list_build)
 #pylint: disable=broad-except
     except Exception as error:
-        ret = build_except_err_string(error, graph)
+        ret = build_except_err_string(error, None)
         return response_text_err(ret), BAD_REQUEST, ''
 ###route_api_build_graph
 
@@ -1299,12 +1416,17 @@ def route_api_html_folder_filename(folder, filename):
     app.logger.info('route_api_html_folder_filename')
     try:
         if folder == 'graphs_img':
-            fil = './'+folder+'/'+filename
+            fil = GRAPHS_IMG+filename
         elif folder == 'html':
-            fil = './html/'+filename
+            fil = HTML_PATH+filename
         else:
-            fil = './html/'+folder+'/'+filename
+            fil = HTML_PATH+folder+'/'+filename
         app.logger.info(fil)
+
+        file_extension = os.path.splitext(fil)[1]
+        if folder == 'cgi-bin' and file_extension == '.cgi':
+            ret = subprocess.check_output([RUN_CGI, fil]).decode("utf-8")
+            return response_text(ret, 'text/html'), OK
 
         ret = read_file(fil)
         if ret[1] != OK:
@@ -1369,18 +1491,24 @@ def route_api_sql():
 
         #get cf:
         cif = 'LAST'
-        app.logger.info('000')
         app.logger.info(command)
         if ' cf = ' in command:
-            app.logger.info('111')
             cifindex = commandlist.index('cf')+2
-            app.logger.info(str(cifindex))
+            #app.logger.info(str(cifindex))
             if cifindex < commandlength:
-                app.logger.info('222')
                 cif = commandlist[cifindex].upper()
                 if not cif in ('LAST', 'AVERAGE', 'MIN', 'MAX'):
-                    app.logger.info('333')
                     return response_text_err('cf value '+cif+' not allowed'), BAD_REQUEST
+        app.logger.info('cif='+str(cif))
+
+        #get resolution:
+        resolution = None
+        if ' r = ' in command:
+            resindex = commandlist.index('r')+2
+            #app.logger.info(str(resindex))
+            if resindex < commandlength:
+                resolution = commandlist[resindex]
+        app.logger.info('r='+str(resolution))
 
         #get dbase name:
         dbase = commandlist[fromindex+1]
@@ -1465,6 +1593,8 @@ def route_api_sql():
 
         #fetch
         params = (RRD_PATH+dbase+'.rrd', cif, '-s', start, '-e', end, '-a')
+        if resolution:
+            params += ('--resolution', resolution)
         app.logger.info(params)
         fetch = rrdtool.fetch(*params)
         fstart = fetch[0][0]

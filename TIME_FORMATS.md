@@ -2,12 +2,12 @@
 
 # Time Formats
 
-The RRdtool database software offers a wide range of time formats. See the excerpt
+The RRdtool software offers a wide range of time formats. See the excerpt
  of the RRDtool documentation below.
 RRDTool_API supports these formats as well, with some differences:
 <br>
 
-## Differences between RRDtool Database and RRDTool_API
+## Differences between RRDtool and RRDTool_API
 
 * **m** = abbreviation, will be changed to minute
 * **M** = abbreviation, will be changed to Month
@@ -19,12 +19,18 @@ RRDTool_API supports these formats as well, with some differences:
 In case of graphs the very **last** respectively very **first** timestamp of all included databases is taken.
 
 Specifications in the browser command line:
-* e=\<end time>, default: now
-* l=\<length of the time interval>, default: 1day
-* s=\<start time>, default: \<end time> - \<length>
+* **e** = \<end time>, default: now
+* **l** = \<length of the time interval>, default: 1day
+* **s** = \<start time>, default: \<end time> - \<length>
+* **r** = \<resolution>, rrdfetch+select: parameter --resolution, rrdgraph: parameter --step, default: highest resolution
+
+Parameter hierarchy:
+1. input value
+2. value from graph definition file
+3. default value
 <br><br>
 
-## Time Specification of RRDtool Database
+## Time Specification of the RRDtool Software
 Source: https://oss.oetiker.ch/rrdtool/doc/rrdfetch.en.html
 
 

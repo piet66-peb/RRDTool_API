@@ -13,7 +13,7 @@
 #h Resources:    
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.0.0 2023-01-02/peb
+#h Version:      V1.0.0 2023-02-25/peb
 #v History:      V1.0.0 2022-11-20/peb first version
 #h Copyright:    (C) piet66 2022
 #h License:      MIT
@@ -22,7 +22,7 @@
 
 MODULE='constants';
 VERSION='V1.0.0'
-WRITTEN='2023-01-02/peb'
+WRITTEN='2023-02-25/peb'
 
 PACKET_NAME=RRDTool_API
 PACKET_PATH=`dirname $(readlink -f $0)`
@@ -44,6 +44,8 @@ HTML=./html
 mkdir -pv $HTML/img
 RRD=./rrd
 mkdir -pv $RRD
+TMP_DIR=./tmp
+mkdir -pv $TMP_DIR
 
 LOG_DIR=log
 LOG_PATH=$PACKET_PATH/$LOG_DIR

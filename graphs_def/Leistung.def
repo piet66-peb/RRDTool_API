@@ -1,0 +1,37 @@
+#
+# Graph definition file
+# all options must be separated to single strings
+#
+
+(
+#'-s', 'end-1w',         #--start
+#'-e', 'now',            #--end
+#'-length', '1d',        #--length
+
+#'-w', '1000',           #--width
+#'-h', '300',            #--height
+
+#[-a PNG|SVG|EPS|PDF|XML|XMLENUM|JSON|JSONTIME|CSV|TSV|SSV]
+#'-a', 'PNG',            #--imgformats
+'-n', 'DEFAULT:10',     #--font
+'-n', 'TITLE:14:Times', #--font
+'-X', '0',              #--units-exponent
+
+'-l', '0',              #--lower-limit
+
+'TEXTALIGN:left',
+'-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
+
+'DEF:consumption=electric_meter.rrd:consumption:AVERAGE',
+'CDEF:conskwh=consumption,3600,*,1000,/',
+'AREA:conskwh#00FF00:Leistung (kW)',
+
+'VDEF:conspd=conskwh,AVERAGE',
+'GPRINT:conspd:Durchschnitt %.1lf kW',
+
+'VDEF:consmin=conskwh,MINIMUM',
+'GPRINT:consmin:Minimum %.1lf kW',
+
+'VDEF:consmax=conskwh,MAXIMUM',
+'GPRINT:consmax:Maximum %.1lf kW'
+)

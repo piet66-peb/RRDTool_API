@@ -17,27 +17,29 @@
 '-X', '0',              #--units-exponent
 '-Y',                   #--alt-y-gr
 '-A',                   #--alt-autoscale
+#'--right-axis', '1:0',
 
 'TEXTALIGN:left',
-'-P', '-t', '<b>*** %GRAPH %TYPE ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
+'-P', '-t', '<b>*** %GRAPH %TYPE/%CF ***</b><br/><i>%CURRTIME: %START ... %END, resolution: %RESOL</i>',    #--title
 
-'DEF:value0=%DB_NAME.rrd:%DS_SOURCE:%CF',
+'DEF:value=%DB_NAME.rrd:%DS_SOURCE:%CF',
 
 # correct value for DERIVE, DDERIVE, COUNTER, DCOUNTER:
-# display value = value*STEP
-'CDEF:value1=value0,%STEP,*',
+# value_disp = value * interval(seconds)
+# otherwise value_disp = value * 1
+'CDEF:value_disp=value,%SECONDS,*',
 
-'LINE2:value1%COLOR:%DS_SOURCE',
+'LINE2:value_disp%COLOR:%DS_SOURCE',
 
-'VDEF:value1_max=value1,MAXIMUM',
-'VDEF:value1_min=value1,MINIMUM',
-'VDEF:value1_last=value1,LAST',
-'VDEF:value1_first=value1,FIRST',
-'VDEF:value1_average=value1,AVERAGE',
+'VDEF:value_disp_max=value_disp,MAXIMUM',
+'VDEF:value_disp_min=value_disp,MINIMUM',
+'VDEF:value_disp_last=value_disp,LAST',
+'VDEF:value_disp_first=value_disp,FIRST',
+'VDEF:value_disp_average=value_disp,AVERAGE',
 
-'GPRINT:value1_first:first=%.1lf',
-'GPRINT:value1_last:last=%.1lf',
-'GPRINT:value1_min:minimum=%.1lf',
-'GPRINT:value1_max:maximum=%.1lf',
-'GPRINT:value1_average:average=%.1lf',
+'GPRINT:value_disp_first:first=%.1lf',
+'GPRINT:value_disp_last:last=%.1lf',
+'GPRINT:value_disp_min:minimum=%.1lf',
+'GPRINT:value_disp_max:maximum=%.1lf',
+'GPRINT:value_disp_average:average=%.1lf',
 )

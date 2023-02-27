@@ -8,6 +8,7 @@
 Description=HTTP API for RRDTool_API as a service
 
 [Service]
+User=pi
 Restart=always
 WorkingDirectory=/media/ZWay_USB/RRDTool_API
 ExecStart=/media/ZWay_USB/RRDTool_API/RRDTool_API.bash

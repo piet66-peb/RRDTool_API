@@ -1,4 +1,5 @@
 /media/ZWay_USB/RRDTool_API/log/RRDTool_API.log {
+        su pi pi
         size=3M
         rotate 10
         compress

@@ -131,7 +131,8 @@
                &nbsp;&nbsp;&nbsp;cf: LAST<br>
                &nbsp;&nbsp;&nbsp;e: now<br>
                &nbsp;&nbsp;&nbsp;l: 1d<br>
-               &nbsp;&nbsp;&nbsp;s: end-1d<br>
+               &nbsp;&nbsp;&nbsp;s: end-&lt;length&gt;<br>
+               &nbsp;&nbsp;&nbsp;r: highest resolution<br>
                &nbsp;&nbsp;&nbsp;times: yes
             </td>
             <td>
@@ -143,6 +144,7 @@
                &nbsp;&nbsp;&nbsp;e=&lt;end time&gt;<br>
                &nbsp;&nbsp;&nbsp;l=&lt;length&gt;<br>
                &nbsp;&nbsp;&nbsp;s=&lt;start time&gt;<br>
+               &nbsp;&nbsp;&nbsp;r=&lt;resolution&gt;<br>
                &nbsp;&nbsp;&nbsp;times=&lt;yes|no&gt;
             </td>
             <td>200</td>
@@ -266,6 +268,7 @@
                &nbsp;&nbsp;&nbsp;e: now<br>
                &nbsp;&nbsp;&nbsp;l: 1d<br>
                &nbsp;&nbsp;&nbsp;s: end-1d<br>
+               &nbsp;&nbsp;&nbsp;r: highest resolution<br>
                &nbsp;&nbsp;&nbsp;w: 1000<br>
                &nbsp;&nbsp;&nbsp;h: 300
             </td>
@@ -282,6 +285,7 @@
                &nbsp;&nbsp;&nbsp;e=&lt;end time&gt;<br>
                &nbsp;&nbsp;&nbsp;l=&lt;length&gt;<br>
                &nbsp;&nbsp;&nbsp;s=&lt;start time&gt;<br>
+               &nbsp;&nbsp;&nbsp;r=&lt;resolution&gt;<br>
                &nbsp;&nbsp;&nbsp;w=&lt;width&gt;<br>
                &nbsp;&nbsp;&nbsp;h=&lt;height&gt;<br><br>
 
@@ -346,6 +350,7 @@
                &nbsp;&nbsp;&nbsp;cf: LAST<br>
                &nbsp;&nbsp;&nbsp;end: now<br>
                &nbsp;&nbsp;&nbsp;start: end-1d<br>
+               &nbsp;&nbsp;&nbsp;r: highest resolution<br>
                <br>
                column names for response:<br> 
                &nbsp;&nbsp;&nbsp;ts = timestamp<br>
@@ -367,9 +372,10 @@
                &nbsp;&nbsp;&nbsp;where cf = &lt;LAST|AVERAGE|MIN|MAX&gt; <br>
                &nbsp;&nbsp;&nbsp;and ts &gt; &lt;start time&gt; <br>
                &nbsp;&nbsp;&nbsp;and ts &lt;= &lt;end time&gt;<br>
+               &nbsp;&nbsp;&nbsp;and r = &lt;resolution&gt;<br>
                epoch time in seconds or milliseconds<br><br>
                text response, 
-               each record returned as a string with a comma separated list of values<br><br>
+               each record contains as a string with a comma separated list of values<br><br>
                
                <b>json:</b> json response, array of arrays <br><br>
                no columns and and no '*' given:

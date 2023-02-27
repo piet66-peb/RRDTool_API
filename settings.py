@@ -12,9 +12,12 @@
 LOGLEVEL = 30
 
 ####
-#### path to rrd databases:
+#### path definitions:A
+#### Attention: all path strings must end with a slash!
 ####
-RRD_PATH = './rrd'
+RRD_PATH = './rrd/'
+CGI_PATH = './html/cgi-bin/'
+RUN_CGI = './html/cgi-bin/run_cgi.bash'
 
 ####
 #### enable external Markdown viewer libraries md-block

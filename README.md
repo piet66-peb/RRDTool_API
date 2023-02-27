@@ -1,6 +1,6 @@
 <!-- use sgmlproc for generating a html file -->
 
-![](icon.png)
+[![](icon.png)](https://github.com/piet66-peb?tab=repositories)
 [![](https://oss.oetiker.ch/rrdtool/inc/rrdtool-logo-dark.png)](https://oss.oetiker.ch/rrdtool/)
 
 # RRDTool_API
@@ -98,7 +98,7 @@ The generated graphs are stored in the **./graphs_img** folder.
 
 ![](html/img/example.png)
 
-RDDTool_API provides the possibility to generate default graph definitionss from
+RDDTool_API provides the possibility to generate default graph definitions from
  a database file. These can then be further developed manually.
 
 
@@ -108,14 +108,30 @@ The **./html** folder can be used to store user web pages to be called by
 the API. Please note that RRDTool_API doesn't support all features of common 
 web servers. It is mainly designed to display pages with generated graphs.
 
-#### Examples
+#### Examples of Custom Content
 
-For more details on custom content, see the included examples. After copying 
-the contents of the **example** folder, you can play around with them. To install on a new 
-system, you will need to restore the example databases from the included xml debug files
-using the **restore_all_rrd_from_xml.bash** script.
+Instead of a huge manual, I have included some examples covering the most interesting cases:
+
+* In the folder **rrd/**: some create scripts and xml dumps.
+* In the folder **html/**: an index.html and some webpages calling graphs in different ways.
+* In the folder **graphs_def/**: some graph definition files.
+* In the folder **html/cgi-bin/**: an example for running rrdcgi. I don't recommend
+this, but it is possible :smirk:.
+
+Installation and Usage:
+
+1. Restore all rrd-files with the shell script **restore_all_rrd_from_xml.bash**
+   in the folder rrb.
+2. Generate the necessary default graph definitions for all rrd files via UI with 
+   the command **/new_graph_definition?db=<...>**.
+3. Run the example pages via **/html/index.html**.
+
+When you don't need them any more, you should remove them from the standard folders.
+
 
 #### Additional Resources
+
+[RRDtool advanced Topics](https://tobi.oetiker.ch/ouce2013/)
 
 [RRDtool Wizard](http://rrdwizard.appspot.com/index.php)
 

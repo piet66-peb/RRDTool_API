@@ -1,0 +1,71 @@
+#
+# Graph definition file
+# all options must be separated to single strings
+#
+
+(
+#'-s', 'end-1w',         #--start
+#'-e', 'now',            #--end
+#'-length', '1d',        #--length
+
+'-w', '1250',           #--width
+'-h', '600',            #--height
+
+#'-a', 'PNG',            #--imgformats
+'-n', 'DEFAULT:10',     #--font
+'-n', 'TITLE:14:Times', #--font
+'-X', '0',              #--units-exponent
+#'-Y',                   #--alt-y-grid
+#'-A',                   #--alt-autoscale
+'-r',                   #--rigid
+'-i',                   #--interlaced
+
+'TEXTALIGN:left',
+'-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
+
+#1. coolect data:
+#----------------
+#electric power:
+'DEF:consumption=electric_meter.rrd:consumption:AVERAGE',
+'CDEF:leistung=consumption,3600,*,1000,/',
+'VDEF:leistung_ds=leistung,AVERAGE',
+'VDEF:leistung_max=leistung,MAXIMUM',
+
+#consumption:
+'VDEF:consumption_ds=consumption,AVERAGE',
+'VDEF:consumption_max=consumption,MAXIMUM',
+
+#reading, aligned to the electrical power:
+'DEF:reading=electric_meter.rrd:reading:LAST',
+'VDEF:reading_min=reading,MINIMUM',
+'VDEF:reading_max=reading,MAXIMUM',
+'CDEF:reading_diff=reading,reading,-,reading_max,+,reading_min,-',
+'CDEF:reading_move=reading,reading_min,-,reading_diff,/,leistung_max,*',
+'VDEF:reading_last=reading,LAST',
+
+#horizontal line at 0,53 kW
+'CDEF:ds_2022=reading,reading,-,0.53,+',
+'VDEF:ds_2022_last=ds_2022,LAST',
+
+#night, aligned to the electrical power;
+'DEF:daylight=daylight.rrd:daylight:LAST',
+'CDEF:nacht=daylight,leistung_max,*',
+
+#2. display all:
+#---------------
+'AREA:nacht#80808030:night, 0=day, 1=night',
+
+'AREA:leistung#00FF00:power (kW)',
+'GPRINT:leistung_ds:average\: %.1lf',
+'GPRINT:leistung_max:maximum\: %.1lf',
+
+'LINE2:consumption#000000:consumption/second (kWh)',
+'GPRINT:consumption_ds:average\: %.1lf',
+'GPRINT:consumption_max:maximum\: %.1lf',
+
+'LINE2:reading_move#FF0000:electric reading (kWh)',
+'GPRINT:reading_last:last reading\: %.1lf',
+
+'LINE2:ds_2022#555555:average 2022:dashes',
+'GPRINT:ds_2022_last:(%.2lf kWh/hour)'
+)

@@ -3,18 +3,16 @@
 #h
 #h Name:         get_procid.bash
 #h Type:         Linux shell script
-#h Purpose:      reads the process id of daylight_status function
+#h Purpose:      gets the process, displays start/ stop command
 #h Project:      
 #h Usage:        ./get_procid.bash
-#h               kill process with:
-#h                 kill <procid>
 #h Result:       
 #h Examples:     
 #h Outline:      
 #h Resources:    
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.0.0 2023-01-05/peb
+#h Version:      V1.0.0 2023-02-23/peb
 #v History:      V1.0.0 2022-12-11/peb first version
 #h Copyright:    (C) piet66 2022
 #h License:      MIT
@@ -23,26 +21,29 @@
 
 MODULE='get_procid.bash';
 VERSION='V1.0.0'
-WRITTEN='2023-01-05/peb'
+WRITTEN='2023-02-23/peb'
 
 . `dirname $(readlink -f $0)`/00_constants >/dev/null
 
 PROC=$PACKET_NAME
-ret=`ps -efj | egrep "$PROC" | grep -v grep | grep -v PGID`
+systemctl is-active --quiet "$PROC"
 
-echo ''
-if [ "$ret" == "" ]
+if [ $? -ne 0 ]
 then    
-    echo process $PROC is not started
-else
-    sudo systemctl status $PROC | cat
+    user=`systemctl show -pUser $PROC`
     echo ''
-    echo stop processes $PROC with:
+    echo process $PROC, $user is not started
+else
+    echo ''
+    systemctl status $PROC | cat
+    systemctl show -pUser $PROC
+    echo ''
+    echo stop process with:
     echo "sudo systemctl stop $PROC"
 fi
 
 echo ''
-echo '(re)start process with:'
+echo 'start process with:'
 echo "sudo systemctl start $PROC"
 echo ''
 

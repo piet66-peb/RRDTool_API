@@ -1,0 +1,35 @@
+#
+# Graph definition file
+# all options must be separated to single strings
+#
+
+(
+#'-s', 'end-1w',         #--start
+#'-e', 'now',            #--end
+#'-length', '1d',        #--length
+
+#'-w', '1000',           #--width
+#'-h', '300',            #--height
+
+#'-a', 'PNG',            #--imgformats
+'-n', 'DEFAULT:10',     #--font
+'-n', 'TITLE:14:Times', #--font
+'-X', '0',              #--units-exponent
+'-Y',                   #--alt-y-gr
+'-A',                   #--alt-autoscale
+
+'TEXTALIGN:left',
+'-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
+
+'DEF:reading=electric_meter.rrd:reading:LAST',
+'LINE2:reading#FF0000:Zählerstand (kWh)',
+
+'VDEF:reading_max=reading,LAST',
+'VDEF:reading_min=reading,FIRST',
+'CDEF:reading_diff=reading,reading_min,-',
+'VDEF:diff_last=reading_diff,LAST',
+
+'GPRINT:reading_min:erster Zählerstand %.1lf kWh',
+'GPRINT:reading_max:letzter Zählerstand %.1lf kWh',
+'GPRINT:diff_last:Differenz %.1lf kWh'
+)
