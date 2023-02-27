@@ -33,7 +33,7 @@ Display the main page and the interface description with
 RRDTool_API runs on all operating systems with Python 3 and RRDtool.
 However, all included scripts are Linux bash scripts.
 <br>The operation is done via web browser. For correct formatting of the output
- a JSON Viewer Plugin and a Markdown Viewer Plugin are necessary.
+a JSON Viewer Plugin and a Markdown Viewer Plugin are necessary.
 
 ## Installation
 
