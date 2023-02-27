@@ -121,7 +121,7 @@ this, but it is possible :smirk:.
 Installation and Usage:
 
 1. Restore all rrd-files with the shell script **restore_all_rrd_from_xml.bash**
-   in the folder rrb.
+   in the folder **rrb/**.
 2. Generate the necessary default graph definitions for all rrd files via UI with 
    the command **/new_graph_definition?db=<...>**.
 3. Run the example pages via **/html/index.html**.
