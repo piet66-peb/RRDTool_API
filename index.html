@@ -270,7 +270,8 @@
                &nbsp;&nbsp;&nbsp;s: end-1d<br>
                &nbsp;&nbsp;&nbsp;r: highest resolution<br>
                &nbsp;&nbsp;&nbsp;w: 1000<br>
-               &nbsp;&nbsp;&nbsp;h: 300
+               &nbsp;&nbsp;&nbsp;h: 300<br>
+               &nbsp;&nbsp;&nbsp;back: '/html/'
             </td>
             <td>
                GET
@@ -287,7 +288,8 @@
                &nbsp;&nbsp;&nbsp;s=&lt;start time&gt;<br>
                &nbsp;&nbsp;&nbsp;r=&lt;resolution&gt;<br>
                &nbsp;&nbsp;&nbsp;w=&lt;width&gt;<br>
-               &nbsp;&nbsp;&nbsp;h=&lt;height&gt;<br><br>
+               &nbsp;&nbsp;&nbsp;h=&lt;height&gt;<br>
+               &nbsp;&nbsp;&nbsp;back=&lt;index path for automatic generated page&gt;<br><br>
 
                format for start and end time;<br>
                &nbsp;&nbsp;&nbsp;&lt;point in time&gt;[+-&lt;time difference&gt;]<br>
@@ -307,6 +309,7 @@
             <td>display already generated graphs<br>
                defaults:<br> 
                &nbsp;&nbsp;&nbsp;g: all generated graphs<br>
+               &nbsp;&nbsp;&nbsp;back: '/html/'
             </td>
             <td>
                GET
@@ -315,7 +318,8 @@
                <a href='../display_graph'><u>/display_graph</u></a> 
                <b>[?&lt;options&gt;]</b><br>
                possible options:<br>
-               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;, *: any characters
+               &nbsp;&nbsp;&nbsp;g=&lt;colon separated list of graphs&gt;, *: any characters<br>
+               &nbsp;&nbsp;&nbsp;back=&lt;index path for automatic generated page&gt;
             </td>
             <td>200</td>
             <td></td>

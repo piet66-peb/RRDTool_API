@@ -27,9 +27,13 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.2.0 2023-02-27/peb
+#h Version:      V1.2.1 2023-03-03/peb
 #v History:      V1.0.0 2022-11-23/peb first version
-#v               V1.2.0 2023-02-24/peb [+] cgi-bin
+#v               V1.2.0 2023-02-24/peb [+]cgi-bin
+#v               V1.2.1 2023-03-03/peb [+]parameter 'back' for automatic generated
+#v                                        graph
+#v                                     [+]change texts for automatic generated graph
+#v                                        in settings.py
 #h Copyright:    (C) piet66 2022
 #h License:      http://opensource.org/licenses/MIT
 #h
@@ -67,8 +71,8 @@ import settings
 locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the environment variables
 
 MODULE = 'RRDTool_API.py'
-VERSION = 'V1.2.0'
-WRITTEN = '2023-02-27/peb'
+VERSION = 'V1.2.1'
+WRITTEN = '2023-03-03/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -131,6 +135,9 @@ RUN_CGI = read_setting('RUN_CGI', CGI_PATH+'run_cgi.bash')
 
 WIDTH = str(read_setting('WIDTH', 1200))
 HEIGHT = str(read_setting('HEIGHT', 200))
+
+UPDATE_TEXT = str(read_setting('UPDATE_TEXT', 'Update'))
+BACK_TEXT = str(read_setting('BACK_TEXT', 'Back'))
 
 ENABLE_MD_BLOCK = read_setting('ENABLE_MD_BLOCK', False)
 
@@ -1045,7 +1052,7 @@ def new_graph_definition():
 # build images webpage
 def build_all_images_html(graph_list):
     '''auxiliary function: builds a html page with all images'''
-    html = '''
+    html0 = '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -1055,14 +1062,21 @@ def build_all_images_html(graph_list):
 <body>
    <table>
       <tr>
-         <td> <a href='/html/'> <p style="color:blue;"><u>Index</u></p> </a> </td>
-         <td> <a  id ="e1" href="http//jjjj"> <p style="color:blue;"><u>Aktualisieren</u></p> </a> </td>
+         <td> <a href="%BACK_PATH"> <p style="color:blue;"><u>%BACK_TEXT</u></p> </a> </td>
+         <td> <a  id ="e1" href="http//jjjj"> <p style="color:blue;"><u>%UPDATE_TEXT</u></p> </a> </td>
       </tr>
    </table>
    <script>
        document.getElementById("e1").setAttribute("href", window.location);
    </script>
-   '''
+'''
+    html = html0.replace('%UPDATE_TEXT', UPDATE_TEXT).replace('%BACK_TEXT', BACK_TEXT)
+    back = request.args.get('back')
+    if back:
+        html = html.replace('%BACK_PATH', back)
+    else:
+        html = html.replace('%BACK_PATH', '/html/')
+
     for recgraphs_i in graph_list:
         files = glob.glob(GRAPHS_IMG+recgraphs_i+'.*')
         files.sort()

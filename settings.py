@@ -33,6 +33,11 @@ ENABLE_MD_BLOCK = False
 WIDTH = 1200
 HEIGHT = 200
 
+#UPDATE_TEXT = 'Update'
+#BACK_TEXT = 'Back'
+UPDATE_TEXT = 'Aktualisieren'
+BACK_TEXT = 'Index'
+
 ####
 #### authentication for write accesses
 #### (read accesses don't need any authentication)
