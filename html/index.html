@@ -3,30 +3,65 @@
    <head>
       <title>Index</title>
       <link rel="shortcut icon" href="/html/img/index.webp">
+      <script>
+        let path = '/build_graph';
+        let back = window.location.pathname;
+        let cellid;
+        let graph;
+        let width, height;
+        let hourly = 3600;
+        let daily = hourly * 24;
+        let weekly = daily * 7;
+        let monthly = daily * 30;
+        let yearly = daily * 365;
+        function createLink(text, end, length, resolution, additions) {
+            href = path + '?g=' + graph;
+            if (end) {href += '&e=' + end;}
+            if (length) {href += '&l=' + length;}
+            if (resolution) {href += '&r=' + resolution;}
+            if (back) {href += '&back=' + back;}
+            if (width) {href += '&w=' + width;}
+            if (height) {href += '&h=' + height;}
+            if (additions) {href += additions;}
+            href += '&heading=' + text;
+            //console.log('href='+href);
+
+            let anchor = document.createElement('a');
+            let link = document.createTextNode(text);
+            anchor.appendChild(link);
+            anchor.href = encodeURI(href);
+
+            let td = document.getElementById(cellid);
+            td.appendChild(document.createElement("br"));
+            td.appendChild(anchor);
+            td.appendChild(document.createElement("br"));
+        }
+    </script>
    </head>
    <body>
       <h2>Index</h2>
       <table>
+          <!-- line 1 --> 
          <tr>
+            <!-- Strom --> 
             <td valign=top><img src="/html/img/electric_meter.webp" 
                 alt="/html/img/electric_meter.webp"></td>
 
             <td valign=top>
-                <a style="text-decoration: none; color:black;">
-                    <p><b>Stromzähler:&nbsp;&nbsp;</b></p></a></td>
+                <br><b>Strom<br>Zähler:</b>&nbsp;&nbsp;</td>
 
             <td valign=top>
                 <a href='/html/strom.html?l=1hour&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>eine Stunde (60 Minuten)</u></p></a>
+                    <p style="color:blue; font-size: 100%;"><u>letzt 60 Minuten</u></p></a>
 
                 <a href='/html/strom.html?l=1day&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>ein Tag (24 Stunden)</u></p></a>
+                    <p style="color:blue; font-size: 100%;"><u>letzte 24 Stunden</u></p></a>
 
                 <a href='/html/strom.html?l=2days&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>2 Tage (48 Stunden)</u></p></a>
+                    <p style="color:blue; font-size: 100%;"><u>letzte 48 Stunden</u></p></a>
 
                 <a href='/html/strom.html?l=1week&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>eine Woche (7 Tage)</u></p></a>
+                    <p style="color:blue; font-size: 100%;"><u>letzte 7 Tage</u></p></a>
 
                 <a href='/html/strom.html?l=1Month&e=last'>
                     <p style="color:blue; font-size: 100%;"><u>ein Monat</u></p></a>
@@ -35,38 +70,71 @@
                     <p style="color:blue; font-size: 100%;"><u>ein Jahr</u></p></a>
 
                 <a href='/html/Stromverbrauch.html?l=1day&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>Stromverbrauch</u></p></a>
+                    <p style="color:blue; font-size: 100%;"><u>Stromverbrauch, 24 Stunden</u></p></a>
+
+                <a href='/html/Stromverbrauch.html?l=1day&e=midnight(D,last)'>
+                    <p style="color:blue; font-size: 100%;"><u>Stromverbrauch, vorheriger Tag</u></p></a>
             </td>
 
+            <!-- Netzwerk --> 
+            <td valign=top><img src="/html/img/computer_communication.webp" 
+                alt="/html/img/computer_communication.webp"></td>
+
+            <td valign=top>
+                <br><b>Netzwerk<br>Statistik:</b>&nbsp;&nbsp;</td>
+
+            <td valign=top>
+                <a href='/html/cgi-bin/eth0.cgi'>
+                    <p style="color:blue; font-size: 100%;"><u>eth0</u></p></a>
+            </td>
+         </tr>
+
+          <!-- line 2 --> 
+         <tr>
+            <!-- Heizung --> 
             <td valign=top><img src="/html/img/central_heating.webp" 
                 alt="/html/img/central_heating.webp"></td>
 
             <td valign=top>
-                <a style="text-decoration: none; color:black;">
-                    <p><b>Heizung:&nbsp;&nbsp;</b></p></a></td>
+                <br><b>Heizung:</b>&nbsp;&nbsp;</td>
 
-            <td valign=top>
-                <a href='/build_graph?g=Heizung-*&e=last&l=1day'>
-                    <p style="color:blue; font-size: 100%;"><u>Heizung</u></p></a>
+            <td valign=top id="Heizung">
+                <script>
+                    cellid = "Heizung";
 
-                <a href='/build_graph?g=Heizungsstatistik-B*&e=last&l=1day'>
-                    <p style="color:blue; font-size: 100%;"><u>Heizungsstatistik</u></p></a>
+                    graph = 'Heizung-*';
+                    createLink('Heizung, 24 Stunden', 'last', '24hours', null);
+                    createLink('Heizung, 7 Tage', 'last', '7days', null);
 
-                <a href='/build_graph?g=Heiz*Verbrauch*&e=last'>
-                    <p style="color:blue; font-size: 100%;"><u>Heizöl Verbrauch</u></p></a>
+                    graph = 'Heizungsstatistik-B*';
+                    createLink('Heizungsstatistik, 24 Stunden', 'last', '24hours', null);
+                    createLink('Heizungsstatistik, 7 Tage', 'last', '7days', null);
+                </script>
             </td>
-         </tr>
-         <tr>
-            <td valign=top><img src="/html/img/computer_communication.webp" 
-                alt="computer_communication.webp"></td>
+
+            <!-- Heizöl --> 
+            <td valign=top><img src="/html/img/barrel_oil.webp" 
+                alt="/html/img/barrel_oil.webp"></td>
 
             <td valign=top>
-                <a style="text-decoration: none; color:black;">
-                    <p><b>Netzwerk:&nbsp;&nbsp;</b></p></a></td>
+                <br><b>Heizöl<br>Verbrauch:</b>&nbsp;&nbsp;</td>
 
-            <td valign=top>
-                <a href='/html/cgi-bin/eth0.cgi'>
-                    <p style="color:blue; font-size: 100%;"><u>Statistik für eth0</u></p></a>
+            <td valign=top id="Heizöl">
+                <script>
+                    cellid = "Heizöl";
+                    graph = 'Heizöl Verbrauch';
+
+                    createLink('aktueller Verbrauch (2 Tage), stündlich', 'midnight(D,last)+1day', '2days', null);
+                    createLink('aktueller Verbrauch (2 Wochen), stündlich', 'midnight(W,last)+1week', '2weeks', null);
+                    createLink('aktueller Verbrauch (1 Monat), stündlich', 'midnight(M,last)+1Month', '1Month', null);
+
+                    createLink('aktueller Verbrauch (3 Monate), täglich', 'midnight(M,last)+1Month', '3Months', daily);
+                    createLink('aktueller Verbrauch (3 Monate), wöchentlich', 'midnight(M,last)+1Month', '3Months', weekly);
+
+                    createLink('aktueller Winter, täglich', 'midnight(Y,last)+6Months', '1year', daily);
+                    createLink('aktueller Winter, wöchentlich', 'midnight(Y,last)+6Months', '1year', weekly);
+                    createLink('aktueller Winter, monatlich', 'midnight(Y,last)+6Months', '1year', monthly);
+                </script>
             </td>
          </tr>
       </table>

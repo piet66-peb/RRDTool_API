@@ -27,13 +27,17 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.2.1 2023-03-03/peb
+#h Version:      V1.3.0 2023-03-15/peb
 #v History:      V1.0.0 2022-11-23/peb first version
 #v               V1.2.0 2023-02-24/peb [+]cgi-bin
 #v               V1.2.1 2023-03-03/peb [+]parameter 'back' for automatic generated
 #v                                        graph
 #v                                     [+]change texts for automatic generated graph
 #v                                        in settings.py
+#v               V1.3.0 2023-03-06/peb [+]function midnight()
+#v                                     [+]function midnightUTC()
+#v                                     [+]updatev
+#v                                     [+]&title=<html title>
 #h Copyright:    (C) piet66 2022
 #h License:      http://opensource.org/licenses/MIT
 #h
@@ -49,7 +53,7 @@ import subprocess
 import traceback
 import platform
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 from functools import wraps     #only for correct module documentation
 import locale
@@ -68,11 +72,12 @@ import rrdtool
 
 import settings
 
+os.environ.pop('TZ', None)
 locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the environment variables
 
 MODULE = 'RRDTool_API.py'
-VERSION = 'V1.2.1'
-WRITTEN = '2023-03-03/peb'
+VERSION = 'V1.3.0'
+WRITTEN = '2023-03-15/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -131,13 +136,15 @@ DEFAULTS_PATH = read_setting('DEFAULTS_PATH', './defaults/', True)
 TMP_PATH = read_setting('TMP_PATH', './tmp/', True)
 CGI_PATH = read_setting('CGI_PATH', './html/cgi-bin/', True)
 RUN_CGI = read_setting('RUN_CGI', CGI_PATH+'run_cgi.bash')
-
+CREATE_BASH = read_setting('CREATE_BASH', 'no')
+UTC_FOR_GRAPHS = read_setting('UTC_FOR_GRAPHS', 'no')
 
 WIDTH = str(read_setting('WIDTH', 1200))
 HEIGHT = str(read_setting('HEIGHT', 200))
 
 UPDATE_TEXT = str(read_setting('UPDATE_TEXT', 'Update'))
 BACK_TEXT = str(read_setting('BACK_TEXT', 'Back'))
+GRAPHS_TITLE = str(read_setting('GRAPHS_TITLE', 'RRDTool Graphs'))
 
 ENABLE_MD_BLOCK = read_setting('ENABLE_MD_BLOCK', False)
 
@@ -346,6 +353,125 @@ def request_times_args(set_defaults=True):
         app.logger.info('length: '+length)
     return start, end, length
 
+#pylint: disable=invalid-name
+def midnight(start, end):
+    '''computes midnight localtime midnight'''
+    ret = (start, end)
+    for timetype_i in (start, end):
+        if 'midnight' in timetype_i:
+            for match in re.findall(r"midnight\s*\([^)]*\)", timetype_i):
+                params_string = re.sub(r"^.*\(\s*", "", match)
+                params_string = re.sub(r"\s*\)", "", params_string)
+                params_split = re.split(r"\s*,\s*", params_string)
+                if len(params_split) < 2:
+                    return ret
+
+                if params_split[1] == 'now':
+                    params_split[1] = int(time.time())
+                else:
+                    if not params_split[1].isdigit():
+                        return ret
+                    params_split[1] = int(params_split[1])
+                    if params_split[1] < 1000000000 or params_split[1] > 9999999999:
+                        return ret
+
+                #set date object for new local time:
+                date_in = datetime.fromtimestamp(params_split[1])
+                if params_split[0] == 'D':
+                    date_new = date_in.replace(
+                        hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'M':
+                    date_new = date_in.replace(
+                        day=1, hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'Y':
+                    date_new = date_in.replace(
+                        month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'W':
+                    curr_weekday = date_in.isoweekday()
+                    if curr_weekday == 1:   #Monday
+                        date_new = date_in.replace(
+                            hour=0, minute=0, second=0, microsecond=0)
+                    else:
+                        date_new1 = date_in - timedelta(curr_weekday - 1)
+                        date_new = date_new1.replace(
+                            hour=0, minute=0, second=0, microsecond=0)
+                else:
+                    return ret
+                #convert to timestamp:
+                ts_new = str(int(date_new.timestamp()))
+                #replace match in input:
+                if match in start:
+                    start = start.replace(match, ts_new)
+                if match in end:
+                    end = end.replace(match, ts_new)
+                ret = (start, end)
+    app.logger.info(ret)
+    return ret
+###midnight
+
+#pylint: disable=invalid-name
+def midnightUTC(start, end):
+    '''computes midnight utc midnightUTC'''
+    ret = (start, end)
+    for timetype_i in (start, end):
+        if 'midnightUTC' in timetype_i:
+            for match in re.findall(r"midnightUTC\s*\([^)]*\)", timetype_i):
+                params_string = re.sub(r"^.*\(\s*", "", match)
+                params_string = re.sub(r"\s*\)", "", params_string)
+                params_split = re.split(r"\s*,\s*", params_string)
+                if len(params_split) < 2:
+                    return ret
+
+                if params_split[1] == 'now':
+                    params_split[1] = int(time.time())
+                else:
+                    if not params_split[1].isdigit():
+                        return ret
+                    params_split[1] = int(params_split[1])
+                    if params_split[1] < 1000000000 or params_split[1] > 9999999999:
+                        return ret
+
+                #set date object for new local time:
+                date_in = datetime.fromtimestamp(params_split[1])
+                if params_split[0] == 'D':
+                    date_new = date_in.replace(
+                        hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'M':
+                    date_new = date_in.replace(
+                        day=1, hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'Y':
+                    date_new = date_in.replace(
+                        month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+                elif params_split[0] == 'W':
+                    curr_weekday = date_in.isoweekday()
+                    if curr_weekday == 4:   #Thursday
+                        date_new = date_in.replace(
+                            hour=0, minute=0, second=0, microsecond=0)
+                    if curr_weekday < 4:
+                        date_new1 = date_in - timedelta(7 + curr_weekday - 1)
+                        date_new = date_new1.replace(
+                            hour=0, minute=0, second=0, microsecond=0)
+                    else:
+                        date_new1 = date_in - timedelta(curr_weekday - 1)
+                        date_new = date_new1.replace(
+                            hour=0, minute=0, second=0, microsecond=0)
+                else:
+                    return ret
+                #convert to local timestamp:
+                ts_loc = int(date_new.timestamp())
+                #convert to utc timestamp:
+                ts_utc = (ts_loc // 86400 + 1) * 86400
+                ts_new = str(ts_utc)
+                #replace match in input:
+                if match in start:
+                    start = start.replace(match, ts_new)
+                if match in end:
+                    end = end.replace(match, ts_new)
+                ret = (start, end)
+    app.logger.info(ret)
+    return ret
+###midnightUTC
+
 def replace_times_first_last(start, end, rrd_file_list):
     '''replaces first and last in time argument by the timstamp'''
     first = 'first'
@@ -353,6 +479,10 @@ def replace_times_first_last(start, end, rrd_file_list):
     combi = start + ' ' +end
     ret = (start, end)
     if first not in combi and last not in combi:
+        if 'midnight' in combi:
+            ret = midnight(ret[0], ret[1])
+        if 'midnightUTC' in combi:
+            ret = midnightUTC(ret[0], ret[1])
         return ret
 
     app.logger.info(ret)
@@ -374,6 +504,10 @@ def replace_times_first_last(start, end, rrd_file_list):
             start = start.replace('last', str(last_max))
     ret = (start, end)
     app.logger.info(ret)
+    if 'midnight' in combi:
+        ret = midnight(ret[0], ret[1])
+    if 'midnightUTC' in combi:
+        ret = midnightUTC(ret[0], ret[1])
     return ret
 ###replace_times_first_last
 
@@ -696,6 +830,7 @@ def route_api_list_databases():
         return response_text_err(ret), BAD_REQUEST, ''
 
 @app.route('/<dbase>/update', methods=["POST", "GET"], endpoint='route_api_update')
+@app.route('/<dbase>/updatev', methods=["POST", "GET"], endpoint='route_api_update')
 @auth_required
 def route_api_update(dbase):
     '''route: update database'''
@@ -707,6 +842,10 @@ def route_api_update(dbase):
         values_new = request.args.get('values')
         if not values_new:
             return response_text_err('database '+dbase+' no values specified'), NOT_FOUND
+
+        if '/updatev' in request.path:
+            info = rrdtool.updatev(RRD_PATH+dbase+'.rrd', ts_new+':'+values_new)
+            return response_text(info, ''), OK
 
         rrdtool.update(RRD_PATH+dbase+'.rrd', ts_new+':'+values_new)
         return response_text('database '+dbase+' updated', ''), OK
@@ -772,6 +911,7 @@ def route_api_lastupdate(dbase):
 @app.route('/<dbase>/fetch', methods=["GET"], endpoint='route_api_fetch')
 def route_api_fetch(dbase):
     '''route: fetch database'''
+    params = None
     try:
         if not os.path.isfile(RRD_PATH+dbase+'.rrd'):
             return response_text_err('database '+dbase+' not found'), NOT_FOUND
@@ -816,6 +956,8 @@ def route_api_fetch(dbase):
         return response_text(fetch, ''), OK
 #pylint: disable=broad-except
     except Exception as error:
+        if params:
+            app.logger.error('params='+str(params))
         ret = build_except_err_string(error, None)
         return response_text_err(ret), BAD_REQUEST, ''
 ###route_api_fetch
@@ -1020,10 +1162,9 @@ def new_graph_definition():
 
                 if '%SECONDS' in line:
                     if ds_type in ('DERIVE', 'DDERIVE', 'COUNTER', 'DCOUNTER'):
-                        file_def_new += '\n\n# correct value for summing up for'
-                        file_def_new += '\n# DERIVE, DDERIVE, COUNTER, DCOUNTER:'
-                        file_def_new += '\n# display value = value * nvl(resolution, rrd_step)'
-                        line = line.replace('%SECONDS', '%RESOL='+rrd_step)
+                        file_def_new += '\n\n# summing up for DERIVE, DDERIVE, COUNTER, DCOUNTER:'
+                        file_def_new += '\n# sum = average * interval'
+                        line = line.replace('%SECONDS', 'STEPWIDTH')
                     else:
                         line = line.replace('%SECONDS', '1')
                 file_def_new += "\n'"+line+"',"
@@ -1052,30 +1193,33 @@ def new_graph_definition():
 # build images webpage
 def build_all_images_html(graph_list):
     '''auxiliary function: builds a html page with all images'''
-    html0 = '''
+    BACK_PATH = request.args.get('back', '/html/')
+    HEADING = request.args.get('heading', '')
+    html = '''
 <!DOCTYPE html>
 <html>
 <head>
    <link rel="shortcut icon" href="icon.png" />
-   <title>RRDTool Graphs</title>
-   <style> img{white-space:pre} </style></head>
+   <title>'''+GRAPHS_TITLE+'''</title>
+   <style> img{
+      white-space:pre;
+      max-width: 95%;
+      button {font-size: 16px;}
+   </style></head>
 <body>
+   <h2>'''+HEADING+'''</h2>
    <table>
       <tr>
-         <td> <a href="%BACK_PATH"> <p style="color:blue;"><u>%BACK_TEXT</u></p> </a> </td>
-         <td> <a  id ="e1" href="http//jjjj"> <p style="color:blue;"><u>%UPDATE_TEXT</u></p> </a> </td>
+         <td> <a href="'''+BACK_PATH+'''">
+            <p style="color:blue;"><u>'''+BACK_TEXT+'''</u></p> </a> </td>
+         <td> <a  id ="update" href=""> 
+            <p style="color:blue;"><u>'''+UPDATE_TEXT+'''</u></p> </a> </td>
       </tr>
    </table>
    <script>
-       document.getElementById("e1").setAttribute("href", window.location);
+       document.getElementById("update").setAttribute("href", window.location);
    </script>
 '''
-    html = html0.replace('%UPDATE_TEXT', UPDATE_TEXT).replace('%BACK_TEXT', BACK_TEXT)
-    back = request.args.get('back')
-    if back:
-        html = html.replace('%BACK_PATH', back)
-    else:
-        html = html.replace('%BACK_PATH', '/html/')
 
     for recgraphs_i in graph_list:
         files = glob.glob(GRAPHS_IMG+recgraphs_i+'.*')
@@ -1087,10 +1231,10 @@ def build_all_images_html(graph_list):
                 continue
             if 'image' in mimetype:
                 full_file_i = GRAPHS_IMG+os.path.basename(file_i)
-                html += '   <img src="'+full_file_i+'"'
-                html += ' alt="'+full_file_i+'"><br><br>\n'
+                html += '   <img src="'+full_file_i+'" alt="'+full_file_i+'">\n'
             else:
-                html += '   <a href="'+file_i+'">'+file_i+'</a> <br><br>\n'
+                html += '   <a href="'+file_i+'">'+file_i+'</a>\n'
+            html += '   <br><br>\n'
     html += '</body>\n</html>'
     return html
 
@@ -1226,6 +1370,9 @@ def build_this_graph(graph, start, end, length, width, height, resolution, creat
     start_orig = start
     end_orig = end
 
+    if UTC_FOR_GRAPHS == 'yes':
+        os.environ["TZ"] = "UTC"
+
     #check if first or last given:
     get_first = False
     if end and 'first' in end or start and 'first' in start:
@@ -1328,14 +1475,20 @@ def build_this_graph(graph, start, end, length, width, height, resolution, creat
 
     app.logger.info(definition)
 
+    if create_bash is None and CREATE_BASH == 'yes':
+        create_bash = 'yes'
     if create_bash == 'yes':
     #create a bash script for this rrdgraph:
-        xxx = str(definition).replace("', '", "'\\\n '")
-        xxx = re.sub(r"^\('", "'", xxx, 1)
+        xxx = str(definition).replace("', '", "' \\\n   '")
+        xxx = re.sub(r"^\('", "   '", xxx, 1)
         xxx = re.sub(r"'\)$", "'", xxx, 1)
-        xxx = re.sub('./', "../", xxx, 1)
         fil = open(TMP_PATH+graph+'.def.bash', "w")
-        fil.write('sudo rrdtool graphv \\\n'+xxx)
+        bash = 'pushd `dirname "$0"`/..>/dev/null\n'
+        if UTC_FOR_GRAPHS == 'yes':
+            bash += 'TZ=UTC '
+        bash += 'rrdtool graphv \\\n'+xxx+'\n'
+        bash += 'popd >/dev/null'
+        fil.write(bash)
         fil.close()
 
     result = rrdtool.graph(*definition)
@@ -1371,6 +1524,7 @@ def route_api_build_graph():
         for graph in graph_list_build:
             ret = build_this_graph(
                 graph, start, end, length, width, height, resolution, create_bash)
+            os.environ.pop('TZ', None)
             if ret[1] != OK:
                 return response_text_err(ret[0]), ret[1]
 
@@ -1386,6 +1540,7 @@ def route_api_build_graph():
         return build_all_images_html(graph_list_build)
 #pylint: disable=broad-except
     except Exception as error:
+        os.environ.pop('TZ', None)
         ret = build_except_err_string(error, None)
         return response_text_err(ret), BAD_REQUEST, ''
 ###route_api_build_graph

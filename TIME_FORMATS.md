@@ -5,9 +5,10 @@
 The RRdtool software offers a wide range of time formats. See the excerpt
  of the RRDtool documentation below.
 RRDTool_API supports these formats as well, with some differences:
+
 <br>
 
-## Differences between RRDtool and RRDTool_API
+### Differences between RRDtool and RRDTool_API
 
 * **m** = abbreviation, will be changed to minute
 * **M** = abbreviation, will be changed to Month
@@ -16,19 +17,70 @@ RRDTool_API supports these formats as well, with some differences:
 * Additionally: **last** = timestamp of the last stored entry.
 * Additionally: **first** = timestamp of the first stored entry in top archive rra[0].
 
-In case of graphs the very **last** respectively very **first** timestamp of all included databases is taken.
+In case of a graph the very **last** respectively very **first** timestamp of all included databases is taken.
 
 Specifications in the browser command line:
 * **e** = \<end time>, default: now
 * **l** = \<length of the time interval>, default: 1day
 * **s** = \<start time>, default: \<end time> - \<length>
-* **r** = \<resolution>, rrdfetch+select: parameter --resolution, rrdgraph: parameter --step, default: highest resolution
+* **r** = \<resolution>, *rrdfetch+select*: parameter --resolution, *rrdgraph*: parameter --step, default: highest resolution
 
 Parameter hierarchy:
 1. input value
 2. value from graph definition file
 3. default value
-<br><br>
+
+<br>
+
+### Treating midnight (start of the day) in the times
+
+Start and end times:
+* **midnight** = **midnight today** = midnight of the current day
+* **midnight -1day** = midnight of the previous day
+* **midnight Monday** = if Monday is the current day: midnight of the current day, 
+  otherwise midnight of the next Monday
+* **midnight Monday -1week** = if Monday is the current day: midnight of Monday previous week, 
+  otherwise midnight of Monday in current week
+* **midnight Feb1** = midnight of February 1 in current year
+* **midnight Feb1 -1year** = midnight of February 1 in previous year
+* **midnight Feb1 2022** = midnight of February 1 in year 2022
+
+Time intervals:
+* **s=midnight -1day** and **e=midnight** = complete previous day
+* **s=midnight Mon -1week** and **e=midnight Mon** = complete week, maybe previous
+   week or this week
+* **s=midnight Feb1** and **e=midnight Mar1** = complete February this year
+* **s=midnight Jan1 -1year** and **e=midnight Jan1** = complete previous year
+
+<br>
+
+### Enhancement for defining midnight (start of the day) in the times
+
+The function **onset()** provides a comfortable method to define the start 
+point of a day/ week/ month/ year depending on any timestamp. 
+
+Definition:
+<br>**onset(&lt;kind of interval&gt;, &lt;timestamp&gt;)**
+<br>with:
+- **&lt;kind of interval&gt;**: **D**=day|**W**=week|**M**=month|**Y**=year
+- **&lt;timestamp&gt;**: **now**|**last**|any timestamp
+<br>First day of the week is day #1 = Monday, according to ISO 8601.
+
+Examples:
+<br>**onset(D, now)**: midnight of current day (= 0 = midnight = midnight today)
+<br>**onset(D, now)-1day**: midnight of previous day (= midnight today -1day)
+<br>**onset(D, last)**: midnight of the day with last value stored
+<br>**onset(W, now)**: first day of current week midnight
+<br>**onset(W, now)-1week**: first day of previous week midnight
+<br>**onset(W, last)**: midnight of the first day of the week with last value stored
+<br>**onset(M, now)**:  first day of current month midnight
+<br>**onset(M, now)-1Month**: first day of previous month midnight
+<br>**onset(M, last)**: midnight of the first day of the month with last value stored
+<br>**onset(Y, now)**:  first day of current year midnight
+<br>**onset(Y, now)-1year**: first day of previous year midnight
+<br>**onset(Y, last)**: midnight of the first day of the year with last value stored
+
+<br>
 
 ## Time Specification of the RRDtool Software
 Source: https://oss.oetiker.ch/rrdtool/doc/rrdfetch.en.html
@@ -47,7 +99,8 @@ for a detailed explanation on ways to specify the start time.
 
 the end of the time series in seconds since epoch. See also **AT-STYLE TIME 
 SPECIFICATION** for a detailed explanation of how to specify the end time.
-<br><br>
+
+<br>
 
 ### AT-STYLE TIME SPECIFICATION
 
@@ -131,8 +184,7 @@ there is 1-hour DST forward clock adjustment that occurs around 3:00 Mar 28 
 equals 47 hours; on the other hand, '8:00 Mar 27 1999 +48 hours' = '9:00 Mar 
 29 1999', as expected)
 
-~~NOTE4:~~
-<br>
+~~NOTE4:~~ <br>
 ~~The single-letter abbreviation for both **months** and **minutes** is **m**. 
 To disambiguate them, the parser tries to read your mind :) by applying the 
 following two heuristics:~~

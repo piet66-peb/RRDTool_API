@@ -23,7 +23,7 @@
 '-P', '-t', '<b>*** %GRAPH ***</b><br/><i>%CURRTIME: %START ... %END</i>',    #--title
 
 'DEF:consumption=electric_meter.rrd:consumption:AVERAGE',
-'CDEF:conskwh=consumption,3600,*,1000,/',
+'CDEF:conskwh=consumption,STEPWIDTH,*,1000,/',
 'AREA:conskwh#00FF00:Leistung (kW)',
 
 'VDEF:conspd=conskwh,AVERAGE',

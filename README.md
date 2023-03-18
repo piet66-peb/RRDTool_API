@@ -98,8 +98,9 @@ The generated graphs are stored in the **./graphs_img** folder.
 
 ![](html/img/example.png)
 
-RDDTool_API provides the possibility to generate default graph definitions from
- a database file. These can then be further developed manually.
+RDDTool_API provides the ability to generate standard graph definitions 
+from database files. These can then be refined by hand.
+
 
 
 #### User Web Pages
@@ -113,7 +114,7 @@ web servers. It is mainly designed to display pages with generated graphs.
 Instead of a huge manual, I have included some examples covering the most interesting cases:
 
 * In the folder **rrd/**: some create scripts and xml dumps.
-* In the folder **html/**: an index.html and some webpages calling graphs in different ways.
+* In the folder **html/**: an index.html and some webpages displaying graphs in different ways.
 * In the folder **graphs_def/**: some graph definition files.
 * In the folder **html/cgi-bin/**: an example for running rrdcgi. I don't recommend
 this, but it is possible :smirk:.

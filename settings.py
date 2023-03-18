@@ -17,7 +17,10 @@ LOGLEVEL = 30
 ####
 RRD_PATH = './rrd/'
 CGI_PATH = './html/cgi-bin/'
-RUN_CGI = './html/cgi-bin/run_cgi.bash'
+# additionally create a bash script for generated graph in tmp folder:
+CREATE_BASH = 'no'
+# temporarily set environment variable TZ to 'UTC' for generating graphs:
+UTC_FOR_GRAPHS = 'yes'
 
 ####
 #### enable external Markdown viewer libraries md-block
@@ -33,8 +36,10 @@ ENABLE_MD_BLOCK = False
 WIDTH = 1200
 HEIGHT = 200
 
+#GRAPHS_TITLE = 'RRDTool Graphs'
 #UPDATE_TEXT = 'Update'
 #BACK_TEXT = 'Back'
+GRAPHS_TITLE = 'RRDTool Graph'
 UPDATE_TEXT = 'Aktualisieren'
 BACK_TEXT = 'Index'
 
