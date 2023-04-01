@@ -12,11 +12,27 @@
 LOGLEVEL = 30
 
 ####
-#### path definitions:A
+#### path definitions:
 #### Attention: all path strings must end with a slash!
 ####
 RRD_PATH = './rrd/'
 CGI_PATH = './html/cgi-bin/'
+
+####
+#### special definitions for generating graphs:
+####
+# default sizes:
+WIDTH = 1200
+HEIGHT = 200
+
+# texts for automatically generated graphs:
+#GRAPHS_TITLE = 'RRDTool Graphs'
+#UPDATE_TEXT = 'Update'
+#BACK_TEXT = 'Back'
+GRAPHS_TITLE = 'RRDTool Graph'
+UPDATE_TEXT = 'Aktualisieren'
+BACK_TEXT = 'Index'
+
 # additionally create a bash script for generated graph in tmp folder:
 CREATE_BASH = 'no'
 # temporarily set environment variable TZ to 'UTC' for generating graphs:
@@ -29,19 +45,6 @@ UTC_FOR_GRAPHS = 'yes'
 ####
 #ENABLE_MD_BLOCK = True
 ENABLE_MD_BLOCK = False
-
-####
-#### defaults:
-####
-WIDTH = 1200
-HEIGHT = 200
-
-#GRAPHS_TITLE = 'RRDTool Graphs'
-#UPDATE_TEXT = 'Update'
-#BACK_TEXT = 'Back'
-GRAPHS_TITLE = 'RRDTool Graph'
-UPDATE_TEXT = 'Aktualisieren'
-BACK_TEXT = 'Index'
 
 ####
 #### authentication for write accesses

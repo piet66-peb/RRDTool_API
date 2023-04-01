@@ -27,7 +27,7 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.3.0 2023-03-15/peb
+#h Version:      V1.3.0 2023-03-25/peb
 #v History:      V1.0.0 2022-11-23/peb first version
 #v               V1.2.0 2023-02-24/peb [+]cgi-bin
 #v               V1.2.1 2023-03-03/peb [+]parameter 'back' for automatic generated
@@ -77,7 +77,7 @@ locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the en
 
 MODULE = 'RRDTool_API.py'
 VERSION = 'V1.3.0'
-WRITTEN = '2023-03-15/peb'
+WRITTEN = '2023-03-25/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -173,7 +173,7 @@ CORS(app, methods={"GET": {"origins": "*"}})
 
 # set CORS for POST access:
 if not CORS_HOST is None:
-    # allow POST access for ZWay MxChartDB Admin clients:
+    # allow indirect POST access via Cross-Origin Resource Sharing:
     CORS(app, origins=CORS_HOST)
     app.logger.info('POST method is enabled for: '+''.join(CORS_HOST))
 
