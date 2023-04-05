@@ -35,8 +35,8 @@ BACK_TEXT = 'Index'
 
 # additionally create a bash script for generated graph in tmp folder:
 CREATE_BASH = 'no'
-# temporarily set environment variable TZ to 'UTC' for generating graphs:
-UTC_FOR_GRAPHS = 'yes'
+# set clients timezone for generating graphs, default: server timezone:
+#CLIENT_TIMEZONE = 'UTC'
 
 ####
 #### enable external Markdown viewer libraries md-block

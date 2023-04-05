@@ -54,19 +54,20 @@
 
 #2. alles anzeigen:
 #------------------
-'AREA:nacht#80808030:Nacht, 0=Tag, 1=Nacht',
+#'AREA:nacht#80808030:Nacht, 0=Tag, 1=Nacht',
+'AREA:nacht#80808030:',
 
 'AREA:leistung#00FF00:Leistung (kW)',
 'GPRINT:leistung_ds:Durchschnitt\: %.1lf',
-'GPRINT:leistung_max:Maximum\: %.1lf',
+'GPRINT:leistung_max:Maximum\: %.1lf\l',
 
 'LINE2:consumption#000000:Verbrauch/Sekunde (kWh)',
 'GPRINT:consumption_ds:Durchschnitt\: %.1lf',
-'GPRINT:consumption_max:Maximum\: %.1lf',
+'GPRINT:consumption_max:Maximum\: %.1lf\l',
 
 'LINE2:reading_move#FF0000:Zählerstand (kWh)',
-'GPRINT:reading_last:letzter Zählerstand\: %.1lf',
+'GPRINT:reading_last:letzter Zählerstand\: %.1lf\l',
 
-'LINE2:ds_2022#555555:Durchschnitt 2022:dashes',
+'LINE2:ds_2022#555555:Verbrauch Durchschnitt 2022:dashes',
 'GPRINT:ds_2022_last:(%.2lf kWh/Stunde)'
 )

@@ -27,7 +27,7 @@
 #h               https://pythonhosted.org/rrdtool/index.html
 #h Platforms:    Linux
 #h Authors:      peb piet66
-#h Version:      V1.3.0 2023-03-25/peb
+#h Version:      V1.3.1 2023-04-04/peb
 #v History:      V1.0.0 2022-11-23/peb first version
 #v               V1.2.0 2023-02-24/peb [+]cgi-bin
 #v               V1.2.1 2023-03-03/peb [+]parameter 'back' for automatic generated
@@ -76,8 +76,8 @@ os.environ.pop('TZ', None)
 locale.setlocale(locale.LC_ALL, '')  # this will use the locale as set in the environment variables
 
 MODULE = 'RRDTool_API.py'
-VERSION = 'V1.3.0'
-WRITTEN = '2023-03-25/peb'
+VERSION = 'V1.3.1'
+WRITTEN = '2023-04-04/peb'
 PYTHON = platform.python_version()
 PYTHON_RRDTOOL = rrdtool.__version__
 RRDTOOL = rrdtool.lib_version()
@@ -137,7 +137,11 @@ TMP_PATH = read_setting('TMP_PATH', './tmp/', True)
 CGI_PATH = read_setting('CGI_PATH', './html/cgi-bin/', True)
 RUN_CGI = read_setting('RUN_CGI', CGI_PATH+'run_cgi.bash')
 CREATE_BASH = read_setting('CREATE_BASH', 'no')
-UTC_FOR_GRAPHS = read_setting('UTC_FOR_GRAPHS', 'no')
+CLIENT_TIMEZONE = read_setting('CLIENT_TIMEZONE')
+if CLIENT_TIMEZONE:
+    TZ = 'TZ="'+CLIENT_TIMEZONE+'" '
+else:
+    TZ = ''
 
 WIDTH = str(read_setting('WIDTH', 1200))
 HEIGHT = str(read_setting('HEIGHT', 200))
@@ -1370,8 +1374,8 @@ def build_this_graph(graph, start, end, length, width, height, resolution, creat
     start_orig = start
     end_orig = end
 
-    if UTC_FOR_GRAPHS == 'yes':
-        os.environ["TZ"] = "UTC"
+    if CLIENT_TIMEZONE:
+        os.environ["TZ"] = CLIENT_TIMEZONE
 
     #check if first or last given:
     get_first = False
@@ -1484,9 +1488,7 @@ def build_this_graph(graph, start, end, length, width, height, resolution, creat
         xxx = re.sub(r"'\)$", "'", xxx, 1)
         fil = open(TMP_PATH+graph+'.def.bash', "w")
         bash = 'pushd `dirname "$0"`/..>/dev/null\n'
-        if UTC_FOR_GRAPHS == 'yes':
-            bash += 'TZ=UTC '
-        bash += 'rrdtool graphv \\\n'+xxx+'\n'
+        bash += TZ+'rrdtool graphv \\\n'+xxx+'\n'
         bash += 'popd >/dev/null'
         fil.write(bash)
         fil.close()
@@ -1594,7 +1596,7 @@ def route_api_html_folder_filename(folder, filename):
 
         file_extension = os.path.splitext(fil)[1]
         if folder == 'cgi-bin' and file_extension == '.cgi':
-            ret = subprocess.check_output([RUN_CGI, fil]).decode("utf-8")
+            ret = subprocess.check_output([RUN_CGI, fil, TZ]).decode("utf-8")
             return response_text(ret, 'text/html'), OK
 
         ret = read_file(fil)

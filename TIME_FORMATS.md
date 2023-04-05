@@ -56,29 +56,29 @@ Time intervals:
 
 ### Enhancement for defining midnight (start of the day) in the times
 
-The function **onset()** provides a comfortable method to define the start 
+The function **midnight()** provides a comfortable method to define the start 
 point of a day/ week/ month/ year depending on any timestamp. 
 
 Definition:
-<br>**onset(&lt;kind of interval&gt;, &lt;timestamp&gt;)**
+<br>**midnight(&lt;kind of interval&gt;, &lt;timestamp&gt;)**
 <br>with:
 - **&lt;kind of interval&gt;**: **D**=day|**W**=week|**M**=month|**Y**=year
 - **&lt;timestamp&gt;**: **now**|**last**|any timestamp
 <br>First day of the week is day #1 = Monday, according to ISO 8601.
 
 Examples:
-<br>**onset(D, now)**: midnight of current day (= 0 = midnight = midnight today)
-<br>**onset(D, now)-1day**: midnight of previous day (= midnight today -1day)
-<br>**onset(D, last)**: midnight of the day with last value stored
-<br>**onset(W, now)**: first day of current week midnight
-<br>**onset(W, now)-1week**: first day of previous week midnight
-<br>**onset(W, last)**: midnight of the first day of the week with last value stored
-<br>**onset(M, now)**:  first day of current month midnight
-<br>**onset(M, now)-1Month**: first day of previous month midnight
-<br>**onset(M, last)**: midnight of the first day of the month with last value stored
-<br>**onset(Y, now)**:  first day of current year midnight
-<br>**onset(Y, now)-1year**: first day of previous year midnight
-<br>**onset(Y, last)**: midnight of the first day of the year with last value stored
+<br>**midnight(D, now)**: midnight of current day (= 0 = midnight = midnight today)
+<br>**midnight(D, now)-1day**: midnight of previous day (= midnight today -1day)
+<br>**midnight(D, last)**: midnight of the day with last value stored
+<br>**midnight(W, now)**: first day of current week midnight
+<br>**midnight(W, now)-1week**: first day of previous week midnight
+<br>**midnight(W, last)**: midnight of the first day of the week with last value stored
+<br>**midnight(M, now)**:  first day of current month midnight
+<br>**midnight(M, now)-1Month**: first day of previous month midnight
+<br>**midnight(M, last)**: midnight of the first day of the month with last value stored
+<br>**midnight(Y, now)**:  first day of current year midnight
+<br>**midnight(Y, now)-1year**: first day of previous year midnight
+<br>**midnight(Y, last)**: midnight of the first day of the year with last value stored
 
 <br>
 
